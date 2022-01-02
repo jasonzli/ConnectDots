@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace Dots
 {
@@ -10,10 +11,17 @@ namespace Dots
 
         public GameObject tilePrefab;
         public GameObject dotPrefab;
+        public GameObject lineControllerPrefab;
 
         private Tile[,] m_allTiles;
         private Dot[,] m_allDots;
-        
+
+        public List<Tile> m_selectedTiles; //tiles we've selected
+        private Stack<LineRenderer> m_drawnLines; //stack of lines drawn
+        private LineController m_line; //a tile to mouse line renderer
+
+        private bool m_selecting; //The state variable
+
         private void Start()
         {
             Setup(config);
@@ -33,6 +41,10 @@ namespace Dots
             tilePrefab = boardConfig.tilePrefab;
             m_allTiles = SetupTiles(boardConfig);
             m_allDots = SetupPieces(boardConfig);
+            m_line = Instantiate(lineControllerPrefab, Vector3.zero, Quaternion.identity).GetComponent<LineController>();
+            m_selectedTiles = new List<Tile>(); 
+            m_drawnLines = new Stack<LineRenderer>();
+            m_selecting = false;
             SetupCamera();
         }
         
@@ -82,8 +94,139 @@ namespace Dots
             }
             return newDots;
         }
+
+        /// <summary>
+        /// Dot Selection
+        /// </summary>
+        /// When picking a tile, we add the dot that it is associated with to a set of dots
+        /// Moving the mouse over another tile adds that dot to the selection
+        /// If we move away and then move back over, that unselects the dot at the location
+        /// Selections add tile positions into the list of selections
+        /// When we release the press, we submit the dots and clear them from the board
+
+        //First selection adds a tile and starts the mouse renderer
+        public void SelectDotAtTile(Tile tile)
+        {
+            if (tile == null) return;
+            
+            //Get the dot
+            var chosenDot = m_allDots[tile.xIndex, tile.yIndex];
+            
+            //Set the tile to the previous Tile
+            m_selectedTiles.Add(tile);
+            
+            //Update the line
+            m_line.SetLineColor(chosenDot.type);
+            m_line.FollowMouseFromTile(tile);
+
+            m_selecting = true;
+        }
         
+        //Create a line Controller between two tiles
+        GameObject CreateLineBetweenTiles(Tile start, Tile end)
+        {
+            if (start == null || end == null) return null;
+            
+            //Create the line and set it at the start and end
+            var line = Instantiate(lineControllerPrefab, 
+                new Vector3(start.xIndex, start.yIndex, 1f), Quaternion.identity);
+            
+            //Set the lines
+            line.GetComponent<LineController>().SetLineBetweenTiles(start,end);
+            //Add the line to the stack
+            m_drawnLines.Push(line.GetComponent<LineRenderer>());
+
+            return line;
+        }
         
+        //How to handle our new tile
+        //There is a lot of logic here
+        public void HandleNewDotAtTile(Tile tile)
+        {
+            if (!m_selecting) return; //ignore if we're not selecting tiles
+            if (tile == null) return; //ignore if the tile is null
+            if (m_selectedTiles.Count < 1) return; //ignore if we're back over the only tile
+            
+            var chosenDot = m_allDots[tile.xIndex, tile.yIndex]; //Find the dot at the tile
+            if (chosenDot == null) return; //ignore if no dot
+            
+            //Find the last dot we added
+            var lastTile = m_selectedTiles[m_selectedTiles.Count - 1];
+            var lastDot = m_allDots[lastTile.xIndex,lastTile.yIndex];
+            
+            //First do behavior checks for removal or backwards catching
+            
+            //If this is the last tile we added then we *remove* it
+            if (tile == lastTile)
+            {
+                RemoveDotFromTile(tile);
+                
+                //Clean up line renderer
+                if (m_drawnLines.Count > 0)
+                {
+                    GameObject.Destroy(m_drawnLines.Pop().gameObject);
+                }
+                //Find the last possible mouse point
+                var pointingTile = m_selectedTiles[m_selectedTiles.Count - 1];
+                m_line.FollowMouseFromTile(pointingTile);
+                
+                return; //finish handling
+            }
+            
+            //Check if the tile is point toward our last selected tile ie going backwards
+            if (m_selectedTiles.Count >= 2)
+            {
+                var pointingTile = m_selectedTiles[m_selectedTiles.Count - 2];
+                if (tile == pointingTile) return; //finish handling
+            }
+            
+            //Then do pre-addition checks
+
+            if (chosenDot.type != lastDot.type) return; //ignore if not a type match
+            if (!IsTileCardinalTo(lastTile, tile)) return; //ignore if not cardinal
+            
+            //Create the line
+            var newLine = CreateLineBetweenTiles(lastTile, tile);
+            newLine.GetComponent<LineController>().SetLineColor(chosenDot.type);
+            
+            //Square Clearing behavior if we can connect to a dot that is in our line
+            if (m_selectedTiles.Contains(tile))
+            {
+                //Square found;
+                Debug.Log($"Square found");
+                return; //End handling
+            }
+            
+            //Finally, just normally add the tile and update the mouse line renderer
+            m_selectedTiles.Add(tile);
+            m_line.FollowMouseFromTile(tile);
+        }
+
+        //Remove a tile dot from the list (except the first)
+        void RemoveDotFromTile(Tile tile)
+        {
+            if (tile == null) return;
+            if (m_allDots[tile.xIndex, tile.yIndex] == null) return;
+
+            m_selectedTiles.Remove(tile);
+
+        }
+
+        void OnMouseUp()
+        {
+            ClearPieces();
+        }
+        
+        //Clear the dots after a release event
+        void ClearPieces()
+        {
+            m_selectedTiles.Clear();
+            m_line.Reset();
+            while (m_drawnLines.Count != 0)
+            {
+                GameObject.Destroy(m_drawnLines.Pop().gameObject);
+            }
+        }
         
         /// <summary>
         /// Utilities
@@ -93,6 +236,15 @@ namespace Dots
         bool IsCoordInBoard(int x, int y)
         {
             return (x >= 0 && y >= 0 && x < width && y < height);
+        }
+
+        bool IsTileCardinalTo(Tile origin, Tile target)
+        {
+            if (Mathf.Abs(origin.xIndex - target.xIndex) == 1 && origin.yIndex == target.yIndex) //column aligned
+                return true;
+            if (Mathf.Abs(origin.yIndex - target.yIndex) == 1 && origin.xIndex == target.xIndex) //row aligned
+                return true;
+            return false;
         }
         
         
@@ -120,7 +272,7 @@ namespace Dots
             var newTile = Instantiate(tilePrefab, new Vector3(x,y,z), Quaternion.identity);
             newTile.name = $"Tile ({x},{y})";
             newTile.transform.parent = transform;
-            newTile.GetComponent<Tile>().Init(x,y, config.tileTypes[0]);
+            newTile.GetComponent<Tile>().Init(x,y, this,config.tileTypes[0]);
         
             return newTile.GetComponent<Tile>();
         }

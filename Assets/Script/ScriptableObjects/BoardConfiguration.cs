@@ -15,5 +15,6 @@ namespace Dots
         public CurveParameter dropAnimation;
         public GameObject tilePrefab;
         public GameObject dotPrefab;
+        public GameObject linePrefab;
     }
 }
