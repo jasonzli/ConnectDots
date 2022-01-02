@@ -12,5 +12,6 @@ namespace Dots
         public int height = 2;
         public TileType[] tiles;
         public PieceType[] pieces;
+        public CurveParameter dropAnimation;
     }
 }
