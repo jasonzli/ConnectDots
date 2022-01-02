@@ -218,8 +218,9 @@ namespace Dots
         }
         
         //Clear the dots after a release event
-        void ClearPieces()
+        public void ClearPieces()
         {
+            
             m_selectedTiles.Clear();
             m_line.Reset();
             while (m_drawnLines.Count != 0)
