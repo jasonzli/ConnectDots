@@ -5,6 +5,7 @@ using UnityEngine.PlayerLoop;
 
 namespace Dots
 {
+    
     public class Tile : MonoBehaviour
     {
         public TileType type;
@@ -17,6 +18,7 @@ namespace Dots
             yIndex = y;
             type = tileType;
         }
+        
     }
 
 }
