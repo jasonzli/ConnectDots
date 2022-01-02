@@ -34,7 +34,7 @@ namespace Dots
         void OnMouseEnter()
         {
             if(m_board == null) return;
-            m_board.AddDotAtTile(this);
+            m_board.HandleNewDotAtTile(this);
         }
 
         

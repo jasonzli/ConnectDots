@@ -16,9 +16,11 @@ namespace Dots
         private Tile[,] m_allTiles;
         private Dot[,] m_allDots;
 
-        private Stack<Dot> m_selectedDots;
-        private Stack<Tile> m_selectedTiles;
-        private LineController m_line;
+        public List<Tile> m_selectedTiles; //tiles we've selected
+        private Stack<LineRenderer> m_drawnLines; //stack of lines drawn
+        private LineController m_line; //a tile to mouse line renderer
+
+        private bool m_selecting; //The state variable
 
         private void Start()
         {
@@ -40,8 +42,9 @@ namespace Dots
             m_allTiles = SetupTiles(boardConfig);
             m_allDots = SetupPieces(boardConfig);
             m_line = Instantiate(lineControllerPrefab, Vector3.zero, Quaternion.identity).GetComponent<LineController>();
-            m_selectedDots = new Stack<Dot>();
-            m_selectedTiles = new Stack<Tile>();
+            m_selectedTiles = new List<Tile>(); 
+            m_drawnLines = new Stack<LineRenderer>();
+            m_selecting = false;
             SetupCamera();
         }
         
@@ -101,71 +104,128 @@ namespace Dots
         /// Selections add tile positions into the list of selections
         /// When we release the press, we submit the dots and clear them from the board
 
-        //Select a first tile to add to the list
+        //First selection adds a tile and starts the mouse renderer
         public void SelectDotAtTile(Tile tile)
         {
             if (tile == null) return;
             
             //Get the dot
             var chosenDot = m_allDots[tile.xIndex, tile.yIndex];
-            //Add the dot to the list
-            m_selectedDots.Push(chosenDot);
+            
             //Set the tile to the previous Tile
-            m_selectedTiles.Push(tile);
+            m_selectedTiles.Add(tile);
+            
             //Update the line
             m_line.SetLineColor(chosenDot.type);
-            m_line.UpdateLinePositions(m_selectedTiles.ToArray());
+            m_line.FollowMouseFromTile(tile);
+
+            m_selecting = true;
         }
-
-        //Add a new tile dot to the list
-        public void AddDotAtTile(Tile tile)
+        
+        //Create a line Controller between two tiles
+        GameObject CreateLineBetweenTiles(Tile start, Tile end)
         {
-            if (tile == null) return;
-            if (m_selectedDots.Count == 0 || m_selectedTiles.Count == 0) return;
+            if (start == null || end == null) return null;
             
+            //Create the line and set it at the start and end
+            var line = Instantiate(lineControllerPrefab, 
+                new Vector3(start.xIndex, start.yIndex, 1f), Quaternion.identity);
+            
+            //Set the lines
+            line.GetComponent<LineController>().SetLineBetweenTiles(start,end);
+            //Add the line to the stack
+            m_drawnLines.Push(line.GetComponent<LineRenderer>());
 
-            var chosenDot = m_allDots[tile.xIndex, tile.yIndex];
+            return line;
+        }
+        
+        //How to handle our new tile
+        //There is a lot of logic here
+        public void HandleNewDotAtTile(Tile tile)
+        {
+            if (!m_selecting) return; //ignore if we're not selecting tiles
+            if (tile == null) return; //ignore if the tile is null
+            if (m_selectedTiles.Count < 1) return; //ignore if we're back over the only tile
             
-            if (chosenDot == null) return;
-            var lastDot = m_selectedDots.Peek();
+            var chosenDot = m_allDots[tile.xIndex, tile.yIndex]; //Find the dot at the tile
+            if (chosenDot == null) return; //ignore if no dot
             
-            //and if dot is not a type match, skip
-            if (chosenDot.type != lastDot.type) return;
+            //Find the last dot we added
+            var lastTile = m_selectedTiles[m_selectedTiles.Count - 1];
+            var lastDot = m_allDots[lastTile.xIndex,lastTile.yIndex];
             
-            //If we contain the dot, remove it, otherwise, add it!
-            if (lastDot.gameObject.GetInstanceID() == chosenDot.gameObject.GetInstanceID())
+            //First do behavior checks for removal or backwards catching
+            
+            //If this is the last tile we added then we *remove* it
+            if (tile == lastTile)
             {
-                Debug.Log("Attempting to remove");
-                RemoveLastDot(tile);
-                return;
+                RemoveDotFromTile(tile);
+                
+                //Clean up line renderer
+                if (m_drawnLines.Count > 0)
+                {
+                    GameObject.Destroy(m_drawnLines.Pop().gameObject);
+                }
+                //Find the last possible mouse point
+                var pointingTile = m_selectedTiles[m_selectedTiles.Count - 1];
+                m_line.FollowMouseFromTile(pointingTile);
+                
+                return; //finish handling
             }
             
-            //if tile is not cardinal, skip. Do this after we compare at other points
-            if (!IsTileCardinalTo(m_selectedTiles.Peek(), tile)) return;
+            //Check if the tile is point toward our last selected tile ie going backwards
+            if (m_selectedTiles.Count >= 2)
+            {
+                var pointingTile = m_selectedTiles[m_selectedTiles.Count - 2];
+                if (tile == pointingTile) return; //finish handling
+            }
             
-            m_selectedDots.Push(chosenDot);
-            m_selectedTiles.Push(tile);
-            m_line.UpdateLinePositions(m_selectedTiles.ToArray());
+            //Then do pre-addition checks
+
+            if (chosenDot.type != lastDot.type) return; //ignore if not a type match
+            if (!IsTileCardinalTo(lastTile, tile)) return; //ignore if not cardinal
+            
+            //Create the line
+            var newLine = CreateLineBetweenTiles(lastTile, tile);
+            newLine.GetComponent<LineController>().SetLineColor(chosenDot.type);
+            
+            //Square Clearing behavior if we can connect to a dot that is in our line
+            if (m_selectedTiles.Contains(tile))
+            {
+                //Square found;
+                Debug.Log($"Square found");
+                return; //End handling
+            }
+            
+            //Finally, just normally add the tile and update the mouse line renderer
+            m_selectedTiles.Add(tile);
+            m_line.FollowMouseFromTile(tile);
         }
 
         //Remove a tile dot from the list (except the first)
-        void RemoveLastDot(Tile tile)
+        void RemoveDotFromTile(Tile tile)
         {
             if (tile == null) return;
             if (m_allDots[tile.xIndex, tile.yIndex] == null) return;
-            if (m_selectedDots.Count == 1) return;
 
-            m_selectedDots.Pop(); //remove the dot
-            m_selectedTiles.Pop();
-            
-            m_line.UpdateLinePositions(m_selectedTiles.ToArray());
+            m_selectedTiles.Remove(tile);
+
         }
 
+        void OnMouseUp()
+        {
+            ClearPieces();
+        }
         
         //Clear the dots after a release event
         void ClearPieces()
         {
-            
+            m_selectedTiles.Clear();
+            m_line.Reset();
+            while (m_drawnLines.Count != 0)
+            {
+                GameObject.Destroy(m_drawnLines.Pop().gameObject);
+            }
         }
         
         /// <summary>
