@@ -11,12 +11,15 @@ namespace Dots
 
         public GameObject tilePrefab;
         public GameObject dotPrefab;
+        public GameObject lineControllerPrefab;
 
         private Tile[,] m_allTiles;
         private Dot[,] m_allDots;
 
-        private List<Dot> selectedDots;
-        
+        private Stack<Dot> m_selectedDots;
+        private Stack<Tile> m_selectedTiles;
+        private LineController m_line;
+
         private void Start()
         {
             Setup(config);
@@ -36,6 +39,9 @@ namespace Dots
             tilePrefab = boardConfig.tilePrefab;
             m_allTiles = SetupTiles(boardConfig);
             m_allDots = SetupPieces(boardConfig);
+            m_line = Instantiate(lineControllerPrefab, Vector3.zero, Quaternion.identity).GetComponent<LineController>();
+            m_selectedDots = new Stack<Dot>();
+            m_selectedTiles = new Stack<Tile>();
             SetupCamera();
         }
         
@@ -96,21 +102,58 @@ namespace Dots
         /// When we release the press, we submit the dots and clear them from the board
 
         //Select a first tile to add to the list
-        void SelectTile(int x, int y)
+        public void SelectDotAtTile(Tile tile)
         {
-       
+            if (tile == null) return;
+            
+            //Get the dot
+            var chosenDot = m_allDots[tile.xIndex, tile.yIndex];
+            //Add the dot to the list
+            m_selectedDots.Push(chosenDot);
+            //Set the tile to the previous Tile
+            m_selectedTiles.Push(tile);
+            //Update the line
+            m_line.SetLineColor(chosenDot.type);
+            m_line.UpdateLinePositions(m_selectedTiles.ToArray());
         }
 
         //Add a new tile dot to the list
-        void AddTile()
+        public void AddDotAtTile(Tile tile)
         {
+            if (tile == null) return;
+            if (m_selectedDots.Count == 0 || m_selectedTiles.Count == 0) return;
             
+            //if tile is not cardinal, skip
+            if (!IsTileCardinalTo(m_selectedTiles.Peek(), tile)) return;
+
+            var chosenDot = m_allDots[tile.xIndex, tile.yIndex];
+            
+            if (chosenDot == null) return;
+            
+            
+            
+            //If we contain the dot, remove it, otherwise, add it!
+            if (m_selectedDots.Peek() == chosenDot)
+            {
+                RemoveLastDot(tile);
+                return;
+            }
+            
+            m_selectedDots.Push(chosenDot);
+            m_selectedTiles.Push(tile);
+            m_line.UpdateLinePositions(m_selectedTiles.ToArray());
         }
 
         //Remove a tile dot from the list (except the first)
-        void RemoveTile()
+        void RemoveLastDot(Tile tile)
         {
+            if (tile == null) return;
+            if (m_allDots[tile.xIndex, tile.yIndex] == null) return;
+
+            m_selectedDots.Pop();
+            m_selectedTiles.Pop();
             
+            m_line.UpdateLinePositions(m_selectedTiles.ToArray());
         }
 
         //Clear the dots after a release event
@@ -129,8 +172,12 @@ namespace Dots
             return (x >= 0 && y >= 0 && x < width && y < height);
         }
 
-        bool IsTileCardinalTo()
+        bool IsTileCardinalTo(Tile origin, Tile target)
         {
+            if (Mathf.Abs(origin.xIndex - target.xIndex) == 1 && origin.yIndex == target.yIndex) //column aligned
+                return true;
+            if (Mathf.Abs(origin.yIndex - target.yIndex) == 1 && origin.xIndex == target.xIndex) //row aligned
+                return true;
             return false;
         }
         
@@ -159,7 +206,7 @@ namespace Dots
             var newTile = Instantiate(tilePrefab, new Vector3(x,y,z), Quaternion.identity);
             newTile.name = $"Tile ({x},{y})";
             newTile.transform.parent = transform;
-            newTile.GetComponent<Tile>().Init(x,y, config.tileTypes[0]);
+            newTile.GetComponent<Tile>().Init(x,y, this,config.tileTypes[0]);
         
             return newTile.GetComponent<Tile>();
         }

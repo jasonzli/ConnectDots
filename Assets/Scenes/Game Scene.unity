@@ -421,6 +421,7 @@ MonoBehaviour:
   marginSize: 2
   tilePrefab: {fileID: 1555274982117750612, guid: 5df9584c32f3cf149a0e7207270148f3, type: 3}
   dotPrefab: {fileID: 546116334981736, guid: eff05016f7bf05746b230c4e1ca7d784, type: 3}
+  lineControllerPrefab: {fileID: 4936097339305332450, guid: 3bad694981bdbc248a18741436562056, type: 3}
 --- !u!1 &1835355935
 GameObject:
   m_ObjectHideFlags: 0
