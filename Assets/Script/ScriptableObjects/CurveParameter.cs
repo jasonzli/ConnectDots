@@ -6,5 +6,11 @@ namespace Dots
     public class CurveParameter : ScriptableObject
     {
         public AnimationCurve curve;
+
+        public float Evaluate(float t) 
+        {
+            return curve.Evaluate(t);
+        }
+    
     }
 }

@@ -10,5 +10,8 @@ namespace Dots
         public Color color;
         public bool useTexture;
         public Texture2D texture;
+        public FloatParameter dotSize;
+        public CurveParameter clearAnimation;
+        public CurveParameter dropAnimation;
     }
 }
