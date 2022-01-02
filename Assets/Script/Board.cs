@@ -129,12 +129,15 @@ namespace Dots
             var chosenDot = m_allDots[tile.xIndex, tile.yIndex];
             
             if (chosenDot == null) return;
+            var lastDot = m_selectedDots.Peek();
             
-            
+            //and if dot is not a type match, skip
+            if (chosenDot.type != lastDot.type) return;
             
             //If we contain the dot, remove it, otherwise, add it!
-            if (m_selectedDots.Peek() == chosenDot)
+            if (lastDot.gameObject.GetInstanceID() == chosenDot.gameObject.GetInstanceID())
             {
+                Debug.Log("Attempting to remove");
                 RemoveLastDot(tile);
                 return;
             }
@@ -149,13 +152,15 @@ namespace Dots
         {
             if (tile == null) return;
             if (m_allDots[tile.xIndex, tile.yIndex] == null) return;
+            if (m_selectedDots.Count == 1) return;
 
-            m_selectedDots.Pop();
+            m_selectedDots.Pop(); //remove the dot
             m_selectedTiles.Pop();
             
             m_line.UpdateLinePositions(m_selectedTiles.ToArray());
         }
 
+        
         //Clear the dots after a release event
         void ClearPieces()
         {

@@ -36,6 +36,8 @@ namespace Dots
             if(m_board == null) return;
             m_board.AddDotAtTile(this);
         }
+
+        
     }
 
 }

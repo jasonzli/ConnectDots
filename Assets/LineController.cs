@@ -15,7 +15,10 @@ namespace Dots
             m_renderer = GetComponent<LineRenderer>();
             m_active = false;
         }
-
+        public void Reset()
+        {
+            m_renderer.positionCount = 0;
+        }
         public void SetLineColor(DotType type)
         {
             //Has to actually set the material
@@ -25,26 +28,31 @@ namespace Dots
         }
         public void UpdateLinePositions(Tile[] tiles)
         {
-            m_renderer.positionCount = tiles.Length;
+            m_renderer.positionCount = tiles.Length + 1;
             
-            var points = new Vector3[tiles.Length];//plus one for the mouse position
+            var points = new Vector3[tiles.Length+1];//plus one for the mouse position
 
-            for (int i = 0; i < tiles.Length; i++)
+            //first positoin is reserved for the mouse
+            for (int i = 1; i < tiles.Length+1; i++)
             {
-                points[i] = new Vector3( tiles[i].xIndex, tiles[i].yIndex, 1f);//a little forward to be under the dots
+                points[i] = new Vector3( tiles[i-1].xIndex, tiles[i-1].yIndex, 1f);//a little forward to be under the dots
             }
 
             m_renderer.SetPositions(points);
+            m_active = true;
         }
 
         void Update()
         {
             if (m_active)
             {
-                m_renderer.SetPosition(m_renderer.positionCount - 1,
-                    Camera.main.WorldToScreenPoint(Input.mousePosition));
+                var mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+                m_renderer.SetPosition(0,
+                    new Vector3(mousePosition.x, mousePosition.y, 1f));
             }
         }
+
+
 
         private void OnEnable()
         {
