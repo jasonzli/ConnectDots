@@ -10,5 +10,12 @@ namespace Dots
         public int xIndex;
         public int yIndex;
         public PieceType type;
+
+        public void Init(int x, int y, PieceType pieceType)
+        {
+            xIndex = x;
+            yIndex = y;
+            type = pieceType;
+        }
     }
 }

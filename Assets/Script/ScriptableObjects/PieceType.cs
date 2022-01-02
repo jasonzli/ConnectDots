@@ -8,5 +8,7 @@ namespace Dots
     public class PieceType : ScriptableObject
     {
         public Color color;
+        public bool useTexture;
+        public Texture2D texture;
     }
 }

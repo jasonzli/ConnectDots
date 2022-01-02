@@ -13,7 +13,7 @@ Material:
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
+  m_CustomRenderQueue: 3000
   stringTagMap: {}
   disabledShaderPasses: []
   m_SavedProperties:
@@ -25,7 +25,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Floats:
     - _CircleRadius: 0.25
-    - _DotRadius: 0.138
+    - _DotRadius: 0.25
     m_Colors:
-    - _DotColor: {r: 1, g: 1, b: 1, a: 1}
+    - _DotColor: {r: 0.6603774, g: 0.28311774, b: 0.28311774, a: 1}
   m_BuildTextureStacks: []
