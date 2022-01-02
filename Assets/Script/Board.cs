@@ -5,6 +5,7 @@ using UnityEngine;
 
 namespace Dots
 {
+    [RequireComponent(typeof(SelectionSystem))]
     public class Board : MonoBehaviour
     {
         public BoardConfiguration config;
@@ -21,6 +22,7 @@ namespace Dots
         public FloatParameter rowDropDelay;
         public FloatParameter dotDropTime;
 
+        private SelectionSystem m_selectionSystem;
         private List<Tile> m_selectedTiles; //tiles we've selected
         private Stack<LineRenderer> m_drawnLines; //stack of lines drawn
         private LineController m_line; //a tile to mouse line renderer
@@ -29,6 +31,10 @@ namespace Dots
         private bool m_squareFound;
         private DotType m_selectedType;
 
+        private void Awake()
+        {
+            m_selectionSystem = GetComponent<SelectionSystem>();
+        }
         private void Start()
         {
             Setup(config);
@@ -121,8 +127,7 @@ namespace Dots
             }
             return newDots;
         }
-
-
+        
         /// <summary>
         /// Tile Selection and Line Drawing
         /// </summary>
@@ -254,7 +259,71 @@ namespace Dots
             if (m_selectedTiles.Count < 1) return;
             m_selectedTiles.RemoveAt(m_selectedTiles.Count - 1);
         }
+        
+        
+        //This is an approach I saw from Wilmer Lin's course on Match 3
+        //The alternative would be to put this on the Dot class
+        List<Dot> CollapseColumn(int column, float collapseTime = 0.1f)
+        {
+            List<Dot> fallingDots = new List<Dot>();
 
+            for (int i = 0; i < height - 1; i++)
+            {
+                if (m_allDots[column, i] == null)//if there's an empty dot there because we detroyed it
+                {
+                    var targetPosition = new Vector3(column, i, 0);
+                    //search upwards to find a new dot
+                    for (int j = i + 1; j < height; j++)
+                    {
+                        if (m_allDots[column, j] == null) continue; // haven't found a dot yet
+
+                        m_allDots[column, j]
+                            .DropToPosition(targetPosition, m_allDots[column,j].transform.position, collapseTime, 0f);
+
+                        m_allDots[column, i] = m_allDots[column, j]; //replace dot in the array
+                        m_allDots[column,i].SetCoord(column,j);
+
+                        if (!fallingDots.Contains(m_allDots[column, i]))
+                        {
+                            fallingDots.Add(m_allDots[column, i]);
+                        }
+                        
+                        //create new empty spot
+                        m_allDots[column, j] = null;
+                        break;
+                    }
+                }
+            }
+
+            return fallingDots;
+        }
+
+        List<Dot> CollapseColumn(List<Tile> tiles)
+        {
+            List<Dot> fallingDots = new List<Dot>();
+            List<int> columnsToCollapse = GetColumnsFromTiles(tiles);
+
+            foreach (int column in columnsToCollapse)
+            {
+                fallingDots = fallingDots.Union(CollapseColumn(column)).ToList();
+            }
+
+            return fallingDots;
+        }
+        
+        List<int> GetColumnsFromTiles(List<Tile> tiles)
+        {
+            List<int> columns = new List<int>();
+            foreach (Tile tile in tiles)
+            {
+                if (columns.Contains(tile.xIndex)) continue;
+                columns.Add(tile.xIndex);
+            }
+
+            return columns;
+        }
+        
+        
         
         /// <summary>
         /// Clear pieces from tiles 
@@ -279,6 +348,9 @@ namespace Dots
                 }
                 await ClearDotsFromTiles(m_selectedTiles);
             }
+            
+            //collapse columns
+            CollapseColumn(m_selectedTiles);
             
             //Empty selections and reset mouse line
             m_selectedTiles.Clear();
