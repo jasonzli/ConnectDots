@@ -422,7 +422,8 @@ MonoBehaviour:
   tilePrefab: {fileID: 1555274982117750612, guid: 5df9584c32f3cf149a0e7207270148f3, type: 3}
   dotPrefab: {fileID: 546116334981736, guid: eff05016f7bf05746b230c4e1ca7d784, type: 3}
   lineControllerPrefab: {fileID: 4936097339305332450, guid: 3bad694981bdbc248a18741436562056, type: 3}
-  m_selectedTiles: []
+  rowDropDelay: {fileID: 11400000, guid: e81f9dba405de6e449cd6c0c78ed8594, type: 2}
+  dotDropTime: {fileID: 11400000, guid: 7f949eabf9715e34c8de4fd46e8931f6, type: 2}
 --- !u!1 &1835355935
 GameObject:
   m_ObjectHideFlags: 0

@@ -15,3 +15,6 @@ MonoBehaviour:
   color: {r: 0.44705883, g: 0.7490196, b: 0.5921569, a: 1}
   useTexture: 0
   texture: {fileID: 0}
+  dotSize: {fileID: 11400000, guid: 6c80d86322b1bd048b7de2a94fc76b3f, type: 2}
+  clearAnimation: {fileID: 11400000, guid: a561de0c46c90bd408e7ee18fdc6a1a7, type: 2}
+  dropAnimation: {fileID: 11400000, guid: 851d61c1bf7a4ea4780dae4026760f20, type: 2}
