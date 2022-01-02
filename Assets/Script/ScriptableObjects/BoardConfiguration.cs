@@ -10,8 +10,10 @@ namespace Dots
         public int width = 2;
         [Range(2,100)]
         public int height = 2;
-        public TileType[] tiles;
-        public PieceType[] pieces;
+        public TileType[] tileTypes;
+        public DotType[] dotTypes;
         public CurveParameter dropAnimation;
+        public GameObject tilePrefab;
+        public GameObject dotPrefab;
     }
 }

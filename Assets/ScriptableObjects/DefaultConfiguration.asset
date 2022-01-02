@@ -12,13 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 582090f9e06543e791e57250c67d465b, type: 3}
   m_Name: DefaultConfiguration
   m_EditorClassIdentifier: 
-  width: 2
-  height: 2
-  tiles:
+  width: 5
+  height: 5
+  tileTypes:
   - {fileID: 11400000, guid: 03716042a1dc1004fa7ddce70b9255ad, type: 2}
-  pieces:
+  dotTypes:
+  - {fileID: 11400000, guid: dac74abf0d2de6241b5e519ac160567e, type: 2}
   - {fileID: 11400000, guid: 98d06381b04ddad4d8ea979f4784f277, type: 2}
   - {fileID: 11400000, guid: b547a0db5c156cb4a916a3956b89612d, type: 2}
   - {fileID: 11400000, guid: 01d763dbe19a48744b29775de9f9504f, type: 2}
-  - {fileID: 11400000, guid: dac74abf0d2de6241b5e519ac160567e, type: 2}
   dropAnimation: {fileID: 11400000, guid: 851d61c1bf7a4ea4780dae4026760f20, type: 2}
+  tilePrefab: {fileID: 1555274982117750612, guid: 5df9584c32f3cf149a0e7207270148f3, type: 3}
+  dotPrefab: {fileID: 546116334981736, guid: eff05016f7bf05746b230c4e1ca7d784, type: 3}
