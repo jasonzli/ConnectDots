@@ -37,7 +37,11 @@ namespace Dots
             m_board.HandleNewDotAtTile(this);
         }
 
-        
+        void OnMouseUp()
+        {
+            if (m_board == null) return;
+            m_board.ClearPieces();
+        }
     }
 
 }

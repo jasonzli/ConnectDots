@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using UnityEngine;
 
 namespace Dots
@@ -21,6 +23,8 @@ namespace Dots
         private LineController m_line; //a tile to mouse line renderer
 
         private bool m_selecting; //The state variable
+        private bool m_squareFound;
+        private DotType m_selectedType;
 
         private void Start()
         {
@@ -96,7 +100,7 @@ namespace Dots
         }
 
         /// <summary>
-        /// Dot Selection
+        /// Tile Selection and Line Drawing
         /// </summary>
         /// When picking a tile, we add the dot that it is associated with to a set of dots
         /// Moving the mouse over another tile adds that dot to the selection
@@ -120,6 +124,8 @@ namespace Dots
             m_line.FollowMouseFromTile(tile);
 
             m_selecting = true;
+            m_squareFound = false;
+            m_selectedType = chosenDot.type;
         }
         
         //Create a line Controller between two tiles
@@ -145,21 +151,26 @@ namespace Dots
         {
             if (!m_selecting) return; //ignore if we're not selecting tiles
             if (tile == null) return; //ignore if the tile is null
-            if (m_selectedTiles.Count < 1) return; //ignore if we're back over the only tile
-            
-            var chosenDot = m_allDots[tile.xIndex, tile.yIndex]; //Find the dot at the tile
-            if (chosenDot == null) return; //ignore if no dot
             
             //Find the last dot we added
             var lastTile = m_selectedTiles[m_selectedTiles.Count - 1];
             var lastDot = m_allDots[lastTile.xIndex,lastTile.yIndex];
+            //if it's the first tile, then we only care if it's the same or not
+            if (m_selectedTiles.Count == 1)
+            {
+                if (lastTile == tile) return;//exit early
+            }
+            
+            var chosenDot = m_allDots[tile.xIndex, tile.yIndex]; //Find the dot at the tile
+            if (chosenDot == null) return; //ignore if no dot
             
             //First do behavior checks for removal or backwards catching
             
             //If this is the last tile we added then we *remove* it
             if (tile == lastTile)
             {
-                RemoveDotFromTile(tile);
+                //Clear the last tile
+                RemoveLastTileFromSelection();
                 
                 //Clean up line renderer
                 if (m_drawnLines.Count > 0)
@@ -174,7 +185,7 @@ namespace Dots
             }
             
             //Check if the tile is point toward our last selected tile ie going backwards
-            if (m_selectedTiles.Count >= 2)
+            if (m_selectedTiles.Count >= 2) //alternatively could have stored *direction*
             {
                 var pointingTile = m_selectedTiles[m_selectedTiles.Count - 2];
                 if (tile == pointingTile) return; //finish handling
@@ -192,45 +203,112 @@ namespace Dots
             //Square Clearing behavior if we can connect to a dot that is in our line
             if (m_selectedTiles.Contains(tile))
             {
-                //Square found;
+                //Square found
+                //Illuminate squares
+                m_squareFound = true;
                 Debug.Log($"Square found");
-                return; //End handling
+                
+                //TO DO, square found behavior should also be different
             }
             
-            //Finally, just normally add the tile and update the mouse line renderer
+            //Finally, just normally add the tile and update hte line renderer
             m_selectedTiles.Add(tile);
             m_line.FollowMouseFromTile(tile);
         }
 
         //Remove a tile dot from the list (except the first)
-        void RemoveDotFromTile(Tile tile)
+        void RemoveTileFromSelection(Tile tile)
         {
             if (tile == null) return;
             if (m_allDots[tile.xIndex, tile.yIndex] == null) return;
 
             m_selectedTiles.Remove(tile);
-
         }
 
-        void OnMouseUp()
+        void RemoveLastTileFromSelection()
         {
-            ClearPieces();
+            if (m_selectedTiles.Count < 1) return;
+            m_selectedTiles.RemoveAt(m_selectedTiles.Count - 1);
         }
+
+        
+        /// <summary>
+        /// Clear pieces from tiles 
+        /// </summary>
+        
         
         //Clear the dots after a release event
-        void ClearPieces()
-        {
-            m_selectedTiles.Clear();
-            m_line.Reset();
+        public async void ClearPieces()
+        { 
+            //Destroy line immediately
             while (m_drawnLines.Count != 0)
             {
                 GameObject.Destroy(m_drawnLines.Pop().gameObject);
             }
+
+            if (m_selectedTiles.Count >= 2)//minimum two to clear
+            {
+                if (m_squareFound)
+                {
+                    //add all tiles that have matching dot types to the list
+                    m_selectedTiles = m_selectedTiles.Union(FindAllTilesWithDotType(m_selectedType)).ToList();
+                }
+                await ClearDotsFromTiles(m_selectedTiles);
+            }
+            
+            //Empty selections and reset mouse line
+            m_selectedTiles.Clear();
+            m_line.Reset();
+            m_selecting = false;
+            m_selectedType = null;
         }
         
+        async Task ClearDotsFromTiles(List<Tile> tiles)
+        {
+            //get all the clearing tasks
+            List<Task> clearingTasks = new List<Task>();
+            //Destroy game objects from board
+            foreach (Tile tile in tiles)
+            {
+                if (tile == null) continue;
+                
+                clearingTasks.Add(ClearDotFromTileAt(tile.xIndex,tile.yIndex));
+            }
+
+            await Task.WhenAll(clearingTasks); //might do animation here.
+            
+        }
+
+        //Clear a dot within a tile, does some indirection with the m_allDots array
+        async Task ClearDotFromTileAt(int x, int y)
+        {
+            Dot dotToClear = m_allDots[x, y];
+            if (dotToClear == null) return;
+            
+            m_allDots[x, y] = null;
+            
+            //TO DO:: Do clearing animation()
+            
+            Destroy(dotToClear.gameObject);
+        }
+
         /// <summary>
         /// Utilities
         /// </summary>
+
+        List<Tile> FindAllTilesWithDotType(DotType type)
+        {
+            List<Tile> foundTiles = new List<Tile>();
+            foreach (Tile tile in m_allTiles)
+            {
+                if (tile == null) continue;
+                var dot = m_allDots[tile.xIndex, tile.yIndex];
+                if (dot == null || dot.type != type) continue;
+                
+                foundTiles.Add(tile);
+            }
+            return foundTiles;
+        }
         
         //Check if things are in range or not
         bool IsCoordInBoard(int x, int y)
