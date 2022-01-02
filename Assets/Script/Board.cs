@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace Dots
 {
@@ -13,6 +14,8 @@ namespace Dots
 
         private Tile[,] m_allTiles;
         private Dot[,] m_allDots;
+
+        private List<Dot> selectedDots;
         
         private void Start()
         {
@@ -82,8 +85,39 @@ namespace Dots
             }
             return newDots;
         }
-        
-        
+
+        /// <summary>
+        /// Dot Selection
+        /// </summary>
+        /// When picking a tile, we add the dot that it is associated with to a set of dots
+        /// Moving the mouse over another tile adds that dot to the selection
+        /// If we move away and then move back over, that unselects the dot at the location
+        /// Selections add tile positions into the list of selections
+        /// When we release the press, we submit the dots and clear them from the board
+
+        //Select a first tile to add to the list
+        void SelectTile(int x, int y)
+        {
+       
+        }
+
+        //Add a new tile dot to the list
+        void AddTile()
+        {
+            
+        }
+
+        //Remove a tile dot from the list (except the first)
+        void RemoveTile()
+        {
+            
+        }
+
+        //Clear the dots after a release event
+        void ClearPieces()
+        {
+            
+        }
         
         /// <summary>
         /// Utilities
@@ -93,6 +127,11 @@ namespace Dots
         bool IsCoordInBoard(int x, int y)
         {
             return (x >= 0 && y >= 0 && x < width && y < height);
+        }
+
+        bool IsTileCardinalTo()
+        {
+            return false;
         }
         
         

@@ -18,7 +18,12 @@ namespace Dots
             yIndex = y;
             type = tileType;
         }
-        
+
+        //when clicked, start a line
+        void OnMouseDown()
+        {
+            
+        }
     }
 
 }

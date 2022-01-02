@@ -418,6 +418,7 @@ MonoBehaviour:
   config: {fileID: 11400000, guid: 896243961f197c34888980e41f13456e, type: 2}
   width: 0
   height: 0
+  marginSize: 2
   tilePrefab: {fileID: 1555274982117750612, guid: 5df9584c32f3cf149a0e7207270148f3, type: 3}
   dotPrefab: {fileID: 546116334981736, guid: eff05016f7bf05746b230c4e1ca7d784, type: 3}
 --- !u!1 &1835355935
