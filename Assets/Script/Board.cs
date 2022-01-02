@@ -123,8 +123,6 @@ namespace Dots
             if (tile == null) return;
             if (m_selectedDots.Count == 0 || m_selectedTiles.Count == 0) return;
             
-            //if tile is not cardinal, skip
-            if (!IsTileCardinalTo(m_selectedTiles.Peek(), tile)) return;
 
             var chosenDot = m_allDots[tile.xIndex, tile.yIndex];
             
@@ -141,6 +139,9 @@ namespace Dots
                 RemoveLastDot(tile);
                 return;
             }
+            
+            //if tile is not cardinal, skip. Do this after we compare at other points
+            if (!IsTileCardinalTo(m_selectedTiles.Peek(), tile)) return;
             
             m_selectedDots.Push(chosenDot);
             m_selectedTiles.Push(tile);
