@@ -18,6 +18,7 @@ namespace Dots
             Setup(config);
         }
 
+        //Get local versions of the variables--and possibly reset the board at some point.
         void Setup(BoardConfiguration boardConfig)
         {
             //get local versions of the width and height
@@ -60,6 +61,7 @@ namespace Dots
             return newDots;
         }
 
+        //Check if things are in range or not
         bool IsCoordInBoard(int x, int y)
         {
             return (x >= 0 && y >= 0 && x < width && y < height);
