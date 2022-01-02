@@ -6,6 +6,7 @@ namespace Dots
     {
         public BoardConfiguration config;
         public int width, height;
+        public int marginSize = 2;
 
         public GameObject tilePrefab;
         public GameObject dotPrefab;
@@ -18,6 +19,10 @@ namespace Dots
             Setup(config);
         }
 
+        /// <summary>
+        /// Setup
+        /// </summary>
+        
         //Get local versions of the variables--and possibly reset the board at some point.
         void Setup(BoardConfiguration boardConfig)
         {
@@ -28,6 +33,7 @@ namespace Dots
             tilePrefab = boardConfig.tilePrefab;
             m_allTiles = SetupTiles(boardConfig);
             m_allDots = SetupPieces(boardConfig);
+            SetupCamera();
         }
         
         Tile[,] SetupTiles(BoardConfiguration boardConfig)
@@ -44,7 +50,23 @@ namespace Dots
             }
             return newTiles;
         }
-        
+
+        //Calculate the orthographic size
+        void SetupCamera()
+        {
+            //move the middle position, -10 so it's far back enough
+            Camera.main.transform.position = new Vector3((width - 1) * .5f, (height - 1) * .5f, -10f);
+
+            float aspectRatio = 9f / 16f; //widescreen
+            //calculate the orthographic size
+            float verticalSize = height * .5f + (float) marginSize;
+            float horizontalSize = (width * .5f + (float) marginSize) / aspectRatio;
+            
+            //Use the larger of the two
+            float orthographicSize = verticalSize > horizontalSize ? verticalSize : horizontalSize;
+
+            Camera.main.orthographicSize = orthographicSize;
+        }
         
         Dot[,] SetupPieces(BoardConfiguration boardConfig)
         {
@@ -60,12 +82,23 @@ namespace Dots
             }
             return newDots;
         }
-
+        
+        
+        
+        /// <summary>
+        /// Utilities
+        /// </summary>
+        
         //Check if things are in range or not
         bool IsCoordInBoard(int x, int y)
         {
             return (x >= 0 && y >= 0 && x < width && y < height);
         }
+        
+        
+        /// <summary>
+        /// Tile and Dot factories
+        /// </summary>
         
         //Factory behaviors for creating objects with types
         Tile CreateNormalTile(int x, int y, int z = 0)

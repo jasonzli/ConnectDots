@@ -52,7 +52,7 @@ Shader "ConnectDots/DotShader"
                 //draw a circle distance field from the center
                 float d = distance(i.uv,float2(.5,.5)) - _DotRadius;
                 //1.5/R.y is Fabrice Neyret's trick for smoothstep AA
-                float circleEdge = smoothstep(1.5/_ScreenParams.y, -1.5/_ScreenParams.y, d);
+                float circleEdge = smoothstep(2/_ScreenParams.y, -2./_ScreenParams.y, d);
                 float4 finalColor = _DotColor * circleEdge;
                 
                 return finalColor;
