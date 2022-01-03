@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -50,6 +51,8 @@ namespace Dots
             //get local versions of the width and height
             width = boardConfig.width;
             height = boardConfig.height;
+            m_allDots = new Dot[width, height];
+            m_allTiles = new Tile[width, height];
             dotPrefab = boardConfig.dotPrefab;
             tilePrefab = boardConfig.tilePrefab;
             SetupCamera();
@@ -110,21 +113,45 @@ namespace Dots
         }
         
         //Animated
-        Dot[,] SetupDots(float dropTime = .5f , float rowDelay = .1f)
+        //Runs through the whole board and fills spaces without dots, Optional bottomRow is used to calculate delay-basis
+        Dot[,] SetupDots(float dropTime = .5f , float rowDelay = .1f, int bottomRow = 0)
         {
             var newDots = new Dot[width, height];
-            List<Task> animationTasks = new List<Task>();
+            
             //fill tiles in the board
             for (int j = 0; j < height; j++)
             {
+                var DistanceFromBottomRow = Math.Max(0,j-bottomRow);
                 for (int i = 0; i < width; i++)
                 {
-                    if (newDots[i, j] != null) continue;
+                    if (m_allDots[i, j] != null) continue;
                     //a bit of creative code to make the drops consistent, and a 1 for a magic number to delay the animations
                     newDots[i, j] = CreateRandomDotAt(i, j,
-                        height * 1.1f - j ,dropTime, 1+(1+j)*rowDelay);
+                        height * 1.1f - j ,dropTime, (1+DistanceFromBottomRow)*rowDelay);
+                    PlaceDotInBoard(newDots[i,j],i,j);
                 }
             }
+            return newDots;
+        }
+
+        void PlaceDotInBoard(Dot dot, int x, int y)
+        {
+            if (!IsCoordInBoard(x, y) && dot != null) return;
+            
+            m_allDots[x, y] = dot;
+            dot.xIndex = x;
+            dot.yIndex = y;
+        }
+
+        List<Dot> CreateDotsInTiles(List<Tile> tiles)
+        {
+            List<Dot> newDots = new List<Dot>();
+            foreach (Tile tile in tiles)
+            {
+                var dot = CreateRandomDotAt(tile.xIndex, tile.yIndex, height * 1.1f - tile.yIndex, dotDropTime.value, 0);
+                PlaceDotInBoard(dot,tile.xIndex,tile.yIndex);
+            }
+
             return newDots;
         }
         
@@ -261,8 +288,8 @@ namespace Dots
         }
         
         
-        //This is an approach I saw from Wilmer Lin's course on Match 3
-        //The alternative would be to put this on the Dot class
+        //This is an approach from Wilmer Lin's course on Match 3
+        //The alternative would be to put this on the Dot class and have them search the board *down*--I prefer the board handle the Connect4ness of it all
         List<Dot> CollapseColumn(int column, float collapseTime = 0.1f)
         {
             List<Dot> fallingDots = new List<Dot>();
@@ -276,12 +303,13 @@ namespace Dots
                     for (int j = i + 1; j < height; j++)
                     {
                         if (m_allDots[column, j] == null) continue; // haven't found a dot yet
-
+                        
+                        //Triggers asynchronous movement function
                         m_allDots[column, j]
                             .DropToPosition(targetPosition, m_allDots[column,j].transform.position, collapseTime, 0f);
 
                         m_allDots[column, i] = m_allDots[column, j]; //replace dot in the array
-                        m_allDots[column,i].SetCoord(column,j);
+                        m_allDots[column, i].SetCoord(column,j);
 
                         if (!fallingDots.Contains(m_allDots[column, i]))
                         {
@@ -351,7 +379,11 @@ namespace Dots
             
             //collapse columns
             CollapseColumn(m_selectedTiles);
-            
+
+            //get the empty tiles
+            var emptyTiles = AllEmptyTiles();
+            SetupDots(dotDropTime.value,rowDropDelay.value,LowestRowInTileSet(emptyTiles));
+
             //Empty selections and reset mouse line
             m_selectedTiles.Clear();
             m_line.Reset();
@@ -392,6 +424,28 @@ namespace Dots
         /// <summary>
         /// Utilities
         /// </summary>
+
+        List<Tile> AllEmptyTiles()
+        {
+            List<Tile> emptyTiles = new List<Tile>();
+            foreach (Tile tile in m_allTiles)
+            {
+                if(m_allDots[tile.xIndex,tile.yIndex] == null) 
+                    emptyTiles.Add(tile);
+            }
+
+            return emptyTiles;
+        }
+        int LowestRowInTileSet(List<Tile> tiles)
+        {
+            int lowestRow = Int32.MaxValue;
+            foreach (Tile tile in tiles)
+            {
+                if (tile.yIndex < lowestRow) lowestRow = tile.yIndex;
+            }
+
+            return lowestRow;
+        }
 
         List<Tile> FindAllTilesWithDotType(DotType type)
         {
