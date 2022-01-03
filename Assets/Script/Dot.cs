@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.PlayerLoop;
 
 namespace Dots
 {
@@ -12,11 +13,25 @@ namespace Dots
         public int yIndex;
         public DotType type;
         public bool isAnimating = false;
+        public GameObject selectionAnimationObject;
         
         //Used for shader animation
         private MaterialPropertyBlock m_materialProps;
         private MeshRenderer m_renderer;
+        private DotSelectionAnimation m_selectionEffect;
 
+        void OnEnable()
+        {
+            SelectionSystem.DotSelected += OnSelected;
+            SelectionSystem.SquareFound += OnSquare;
+        }
+
+        void OnDisable()
+        {
+            SelectionSystem.DotSelected -= OnSelected;
+            SelectionSystem.SquareFound -= OnSquare;
+        }
+        
         public void Init(int x, int y, DotType dotType)
         {
             SetCoord(x, y);
@@ -27,6 +42,8 @@ namespace Dots
             m_materialProps.SetFloat("_DotRadius", type.dotSize.value);
             m_renderer = GetComponent<MeshRenderer>();
             m_renderer.SetPropertyBlock(m_materialProps);
+            m_selectionEffect = selectionAnimationObject.GetComponent<DotSelectionAnimation>();
+            m_selectionEffect.Init(type);
         }
 
         //For reinsertion into the board
@@ -34,6 +51,22 @@ namespace Dots
         {
             xIndex = x;
             yIndex = y;
+        }
+
+        //Selection behavior
+        void OnSelected(Dot dot)
+        {
+            if (gameObject != dot.gameObject) return; //not the same dot, skip
+
+            m_selectionEffect.Animate();
+        }
+        
+        //If square found
+        void OnSquare(Dot dot)
+        {
+            if (type != dot.type) return;
+
+            m_selectionEffect.Animate();
         }
 
         //Disappear over time, can be set

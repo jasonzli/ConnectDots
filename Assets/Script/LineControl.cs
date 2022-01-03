@@ -83,7 +83,6 @@ namespace Dots
 
         void DrawLineBetweenTiles(Tile a, Tile b)
         {
-            Debug.Log("Hello");
             var line = m_linePool.GetPrefabInstance();
             line.transform.position = a.transform.position;
             var startPosition = new Vector3(a.xIndex, a.yIndex, depth);

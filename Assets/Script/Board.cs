@@ -301,6 +301,7 @@ namespace Dots
             if (tile == null) return null;
             return m_allDots[tile.xIndex, tile.yIndex];
         }
+        
         //Calculate the orthographic size
         void SetupCamera()
         {

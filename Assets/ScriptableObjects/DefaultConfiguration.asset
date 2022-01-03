@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 582090f9e06543e791e57250c67d465b, type: 3}
   m_Name: DefaultConfiguration
   m_EditorClassIdentifier: 
-  width: 20
-  height: 35
+  width: 7
+  height: 9
   tileTypes:
   - {fileID: 11400000, guid: 03716042a1dc1004fa7ddce70b9255ad, type: 2}
   dotTypes:
