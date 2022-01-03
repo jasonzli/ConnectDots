@@ -22,5 +22,6 @@ namespace Dots
             m_renderer.startWidth = width;
             m_renderer.material.SetColor("_Color",color);
         }
+        
     }
 }

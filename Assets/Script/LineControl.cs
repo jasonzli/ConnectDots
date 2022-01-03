@@ -43,7 +43,7 @@ namespace Dots
             SelectionSystem.DotSelected += DrawMouseLine;
             SelectionSystem.ConnectionAdded += DrawLineBetweenTiles;
             SelectionSystem.SelectionReversed += RemoveLastLine;
-            Tile.SelectionEnded += RemoveLines;
+            Tile.SelectionEnded += RemoveAllLines;
         }
 
         void OnDisable()
@@ -51,7 +51,7 @@ namespace Dots
             SelectionSystem.DotSelected -= DrawMouseLine;
             SelectionSystem.ConnectionAdded -= DrawLineBetweenTiles;
             SelectionSystem.SelectionReversed -= RemoveLastLine;
-            Tile.SelectionEnded -= RemoveLines;
+            Tile.SelectionEnded -= RemoveAllLines;
         }
 
         void Update()
@@ -95,15 +95,16 @@ namespace Dots
         void RemoveLastLine()
         {
             var lineToRemove = m_activeLines[m_activeLines.Count - 1];
-
+            
+            lineToRemove.ReturnToPool();//return to pool before removing from active
+            
             if (m_activeLines.Count > 1)
             {
                 m_activeLines.RemoveAt(m_activeLines.Count-1);
             }
-            lineToRemove.ReturnToPool();
         }
 
-        void RemoveLines()
+        void RemoveAllLines()
         {
             m_mouseLine.gameObject.SetActive(false);
             
