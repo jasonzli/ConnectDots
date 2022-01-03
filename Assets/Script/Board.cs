@@ -33,7 +33,6 @@ namespace Dots
             get { return m_selectionSystem; }
         }
         private Stack<LineRenderer> m_drawnLines; //stack of lines drawn
-        private LineController m_line; //a tile to mouse line renderer
 
         private bool m_selecting; //The state variable
         private bool m_squareFound;
@@ -181,7 +180,7 @@ namespace Dots
                             .DropToPosition(targetPosition, m_allDots[column,j].transform.position, collapseTime, 0f);
 
                         m_allDots[column, i] = m_allDots[column, j]; //replace dot in the array
-                        m_allDots[column, i].SetCoord(column,j);
+                        m_allDots[column, i].SetCoord(column,i);
 
                         if (!fallingDots.Contains(m_allDots[column, i]))
                         {

@@ -11,13 +11,15 @@ namespace Dots
     public class LineControl : MonoBehaviour
     {
         public GameObject lineDrawPrefab;
+        public GameObject linePoolPrefab;
         public FloatParameter lineThickness;
         public int depth = 1;
         
         private LineRenderer m_mouseLine;
         private Color m_lineColor;
         private SelectionSystem m_selectionSystem;
-        private List<GameObject> m_linePool;
+        private ObjectPool m_linePool;
+        private List<DrawnLine> m_activeLines;
         
         //draw a line from the latest point to the mouse
         private void Awake()
@@ -28,14 +30,17 @@ namespace Dots
         void Reset()
         {
             m_mouseLine = Instantiate(lineDrawPrefab, Vector3.zero, Quaternion.identity, transform).GetComponent<LineRenderer>();
+            m_mouseLine.name = "Mouse Line";
             m_mouseLine.gameObject.SetActive(false);
             m_selectionSystem = GetComponent<SelectionSystem>();
-            m_linePool = new List<GameObject>();
+            m_activeLines = new List<DrawnLine>();
+            m_linePool = Instantiate(linePoolPrefab, Vector3.zero, Quaternion.identity, transform).GetComponent<ObjectPool>();
+            m_linePool.name = "Line Pool";
         }
 
         void OnEnable()
         {
-            SelectionSystem.DotSelected += DrawLines;
+            SelectionSystem.DotSelected += DrawMouseLine;
             SelectionSystem.ConnectionAdded += DrawLineBetweenTiles;
             SelectionSystem.SelectionReversed += RemoveLastLine;
             Tile.SelectionEnded += RemoveLines;
@@ -43,7 +48,7 @@ namespace Dots
 
         void OnDisable()
         {
-            SelectionSystem.DotSelected -= DrawLines;
+            SelectionSystem.DotSelected -= DrawMouseLine;
             SelectionSystem.ConnectionAdded -= DrawLineBetweenTiles;
             SelectionSystem.SelectionReversed -= RemoveLastLine;
             Tile.SelectionEnded -= RemoveLines;
@@ -60,7 +65,7 @@ namespace Dots
         }
 
         //draw lines between dots;
-        void DrawLines(Dot dot)
+        void DrawMouseLine(Dot dot)
         {
             m_lineColor = dot.type.color;
             if (!m_mouseLine.gameObject.active)
@@ -78,40 +83,37 @@ namespace Dots
 
         void DrawLineBetweenTiles(Tile a, Tile b)
         {
-            
-            var line = Instantiate(lineDrawPrefab, a.transform.position, Quaternion.identity, transform)
-                .GetComponent<LineRenderer>();
-            line.SetPosition(0,
-                new Vector3(a.xIndex, a.yIndex, depth));
-            line.SetPosition(1,
-                new Vector3(b.xIndex, b.yIndex, depth));
-            line.material.SetColor("_Color",m_lineColor);
+            var line = m_linePool.GetPrefabInstance();
+            line.transform.position = a.transform.position;
+            var startPosition = new Vector3(a.xIndex, a.yIndex, depth);
+            var endPosition = new Vector3(b.xIndex, b.yIndex, depth);
+            line.GetComponent<DrawnLine>().Init(startPosition, endPosition, lineThickness.value, m_lineColor);
             ChangeMouseLinePositionTo(new Vector3(a.xIndex,a.yIndex,depth));
-            m_linePool.Add(line.gameObject);
-            
+            m_activeLines.Add(line.GetComponent<DrawnLine>());
         }
 
         void RemoveLastLine()
         {
-            var lineToRemove = m_linePool[m_linePool.Count - 1];
-            var newMouseOrigin = m_linePool[m_linePool.Count - 2].transform.position;
-            ChangeMouseLinePositionTo(newMouseOrigin);
-            m_linePool.RemoveAt(m_linePool.Count-1);
-            //get the line's position
-            
-            lineToRemove.SetActive(false);
+            var lineToRemove = m_activeLines[m_activeLines.Count - 1];
+
+            if (m_activeLines.Count > 1)
+            {
+                m_activeLines.RemoveAt(m_activeLines.Count-1);
+            }
+            lineToRemove.ReturnToPool();
         }
 
         void RemoveLines()
         {
             m_mouseLine.gameObject.SetActive(false);
             
-            if (m_linePool.Count < 1) return;
             //deactivate all the objects
-             foreach(GameObject line in m_linePool)
-             {
-                 line.SetActive(false);
-             }
+            foreach(DrawnLine line in m_activeLines)
+            { 
+                line.ReturnToPool();
+            }
+
+            m_activeLines.Clear();
         }
         
         

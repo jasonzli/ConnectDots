@@ -68,9 +68,7 @@ namespace Dots
         public static Action<Dot> DotSelected;
         void StartSelection(Tile tile)
         {
-            Debug.Log("started selection");
             if (tile == null) return;
-            
             
             hasSelection = true;
             
@@ -80,12 +78,13 @@ namespace Dots
             //set the values
             m_selectedTiles.Add(tile);
             
+            selectionType = chosenDot.type;
+            m_squaresFound = 0;;
+            
             if (DotSelected != null) //yes it fires another event but come on...
             {
                 DotSelected(chosenDot);
             }
-            selectionType = chosenDot.type;
-            m_squaresFound = 0;;
             
         }
 
@@ -108,10 +107,10 @@ namespace Dots
             //check if we're going backwards
             if (m_selectedTiles.Count > 1)//we need more than 1 to go backwards
             {
+                
                 var reverseTile = m_selectedTiles[m_selectedTiles.Count - 2];
                 if (tile == reverseTile)
                 {
-                    
                     m_selectedTiles.RemoveAt(m_selectedTiles.Count - 1);
 
                     if (m_squareTiles.Contains(tile))
@@ -122,12 +121,15 @@ namespace Dots
                     
                     m_paths.RemoveAt(m_paths.Count-1);//remove last connection;
                     
+                    if (DotSelected != null) //yes it fires another event but come on...
+                    {
+                        DotSelected(chosenDot);
+                    }
                     //This updates the lines
                     if (SelectionReversed != null)
                     {
                         SelectionReversed();
                     }
-                    
                     return;
                 }
             }
@@ -163,7 +165,10 @@ namespace Dots
             {
                 ConnectionAdded(tile,lastTile);
             }
-
+            if (DotSelected != null) //yes it fires another event but come on...
+            {
+                DotSelected(chosenDot);
+            }
         }
         
         

@@ -81,7 +81,7 @@ namespace Dots
             transform.position = offsetPosition; //needed to prevent dot from staying at the target position
             await Task.Delay( (int) (1000*delayTime) ); //wait for the delay
             await DropTo(targetPosition, offsetPosition, dropInTime); //animate
-
+            
             isAnimating = false;
         }
         
