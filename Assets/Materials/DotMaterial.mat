@@ -25,7 +25,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Floats:
     - _CircleRadius: 0.25
-    - _DotRadius: 0.25
+    - _DotRadius: 0.438
     m_Colors:
     - _DotColor: {r: 0.6603774, g: 0.28311774, b: 0.28311774, a: 1}
   m_BuildTextureStacks: []

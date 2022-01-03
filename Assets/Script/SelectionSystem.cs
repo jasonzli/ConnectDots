@@ -66,14 +66,19 @@ namespace Dots
         }
 
         public static Action<Dot> DotSelected;
+
         void StartSelection(Tile tile)
         {
             if (tile == null) return;
-            
             hasSelection = true;
-            
+
             //find the dot in the tile
             var chosenDot = tile.Dot();
+            if (chosenDot == null) //dot is empty so far
+            {
+                hasSelection = false;
+                return;
+            }
 
             //set the values
             m_selectedTiles.Add(tile);
@@ -92,6 +97,7 @@ namespace Dots
         public static Action<Dot> SquareFound;
         public static Action<Tile, Tile> ConnectionAdded;
         public static Action SelectionReversed;
+        public static Action<int> SquareRemoved;
         void HandleNewDotAtTile(Tile tile)
         {
             if (!hasSelection || tile == null) return;
@@ -99,8 +105,9 @@ namespace Dots
             //A few possible outcomes
             var lastTile = m_selectedTiles[m_selectedTiles.Count - 1];
             var chosenDot = tile.Dot();
-            
+
             //quick rejections
+            if (chosenDot == null) return;
             if (chosenDot.type != selectionType) return; // type doesn't match
             if (!IsTileCardinalTo(tile, lastTile)) return; //not cardinal
             
@@ -111,12 +118,17 @@ namespace Dots
                 var reverseTile = m_selectedTiles[m_selectedTiles.Count - 2];
                 if (tile == reverseTile)
                 {
+                    Tile removedTile = lastTile;
                     m_selectedTiles.RemoveAt(m_selectedTiles.Count - 1);
 
-                    if (m_squareTiles.Contains(tile))
+                    if (m_squareTiles.Contains(lastTile))
                     {
-                        m_squareTiles.Remove(tile);
+                        m_squareTiles.Remove(lastTile);
                         m_squaresFound--;
+                        if (SquareRemoved != null)
+                        {
+                            SquareRemoved(m_squaresFound);
+                        }
                     }
                     
                     m_paths.RemoveAt(m_paths.Count-1);//remove last connection;
