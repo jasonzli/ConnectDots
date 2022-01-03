@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace Dots
@@ -11,11 +12,22 @@ namespace Dots
 
         private List<Tile> m_selectedTiles;
         
-        private HashSet<Connection> m_paths;
-        struct Connection //it's an edge, surprise
+        private List<TileConnection> m_paths;
+        private class TileConnection //it's an edge, surprise
         {
-            public int a;
-            public int b;
+            public TileConnection(Tile _a, Tile _b)
+            {
+                nodes = new HashSet<int>();
+                nodes.Add(_a.gameObject.GetInstanceID());
+                nodes.Add(_b.gameObject.GetInstanceID());
+            }
+
+            public bool IsEqualTo(TileConnection connection)
+            {
+                return this.nodes.SetEquals(connection.nodes);
+            }
+            
+            public HashSet<int> nodes { get; private set; }
         }
         
         public List<Tile> selectedTiles
@@ -34,6 +46,7 @@ namespace Dots
         public void Reset()
         {
             m_selectedTiles = new List<Tile>();
+            m_paths = new List<TileConnection>();
             hasSelection = false;
         }
 
@@ -75,6 +88,9 @@ namespace Dots
             isSquare = false;
             
         }
+
+        //If the tile is valid, we add it and add it as an edge
+        public static Action<Dot> SquareFound;
         void HandleNewDotAtTile(Tile tile)
         {
             if (!hasSelection || tile == null) return;
@@ -86,30 +102,56 @@ namespace Dots
             //quick rejections
             if (chosenDot.type != selectionType) return; // type doesn't match
             if (!IsTileCardinalTo(tile, lastTile)) return; //not cardinal
-            //If we hovered over the last tile but it's only tile
-            if (tile == lastTile && m_selectedTiles.Count == 1) return;
             
-            //now we can check if we're going backwards
-            var reverseTile = m_selectedTiles[m_selectedTiles.Count - 2];
-            if (tile == reverseTile)
+            //check if we're going backwards
+            if (m_selectedTiles.Count > 2)//we need more than 1 to go backwards
             {
-                m_selectedTiles.RemoveAt(m_selectedTiles.Count - 1);
-                
-                //TODO Update lines
-
-                return;
+                var reverseTile = m_selectedTiles[m_selectedTiles.Count - 2];
+                if (tile == reverseTile)
+                {
+                    
+                    m_selectedTiles.RemoveAt(m_selectedTiles.Count - 1);
+                    
+                    //TODO Update lines
+                    
+                    m_paths.RemoveAt(m_paths.Count-1);//remove last connection;
+                    return;
+                }
             }
             
-            //if not backwards then...
-           
+            //Reject if the candidate edge is already traversed
+            TileConnection candidate = new TileConnection(lastTile, tile);
+            if (ConnectionContainedWithinList(m_paths,candidate)) return;
+
+            //everything else should be valid
             
+            //You're making a square if you can connect to something inside the list *and* you aren't repeating
+            if (m_selectedTiles.Contains(tile))
+            {
+                Debug.Log("SquareFound");
+                if (SquareFound != null)
+                {
+                    SquareFound(chosenDot);
+                }
+
+                isSquare = true;
+            }
+
+
             //Simply add the tile
             m_selectedTiles.Add(tile);
+            //and add the connection
+            m_paths.Add(candidate);
             
-            DotSelected(chosenDot);
-            //Square is weird: after square you have to reject anything inside
+            //Alert selections
+            if (DotSelected != null)
+            {
+                DotSelected(chosenDot);
+            }
 
         }
+        
+        
         //Check if tile matches cardinal direction
         bool IsTileCardinalTo(Tile origin, Tile target)
         {
@@ -120,6 +162,14 @@ namespace Dots
             return false;
         }
 
+        bool ConnectionContainedWithinList(List<TileConnection> connections, TileConnection candidate)
+        {
+            foreach (TileConnection connection in connections)
+            {
+                if (connection.IsEqualTo(candidate)) return true;
+            }
+            return false;
+        }
         
     }
 
