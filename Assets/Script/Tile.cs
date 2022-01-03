@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEditor.Experimental.GraphView;
@@ -23,24 +24,38 @@ namespace Dots
             type = tileType;
         }
 
+        public Dot Dot()
+        {
+            return m_board.DotInTile(this);
+        }
+
         //when clicked, start a line
+        public static Action<Tile> SelectionStarted; 
         void OnMouseDown()
         {
-            if (m_board == null) return;
-            m_board.SelectDotAtTile(this);
+            if (SelectionStarted != null)
+            {
+                SelectionStarted(this);
+            }
         }
 
         //Send the tile to the board to be added 
+        public static Action<Tile> SelectionEntered;
         void OnMouseEnter()
         {
-            if(m_board == null) return;
-            m_board.HandleNewDotAtTile(this);
+            if (SelectionEntered != null)
+            {
+                SelectionEntered(this);
+            }
         }
 
+        public static Action SelectionEnded;
         void OnMouseUp()
         {
-            if (m_board == null) return;
-            m_board.ClearPieces();
+            if (SelectionEnded != null)
+            {
+                SelectionEnded();
+            }
         }
     }
 

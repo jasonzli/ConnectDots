@@ -19,6 +19,10 @@ namespace Dots
 
         private Tile[,] m_allTiles;
         private Dot[,] m_allDots;
+        public Dot[,] AllDots
+        {
+            get => m_allDots;
+        }
 
         public FloatParameter rowDropDelay;
         public FloatParameter dotDropTime;
@@ -39,6 +43,16 @@ namespace Dots
         private void Start()
         {
             Setup(config);
+        }
+
+        private void OnEnable()
+        {
+            Tile.SelectionEnded += () => {Debug.Log("Ending Selection");};
+        }
+
+        private void OnDisable()
+        {
+            Tile.SelectionEnded = null;
         }
         
         #region Initial Setup
@@ -143,6 +157,7 @@ namespace Dots
         #endregion
         
         #region Tile Selection and Line drawing
+
         /// <summary>
         /// Tile Selection and Line Drawing
         /// </summary>
@@ -152,6 +167,11 @@ namespace Dots
         /// Selections add tile positions into the list of selections
         /// When we release the press, we submit the dots and clear them from the board
 
+        public void TileSelection(Tile tile)
+        {
+            
+        }
+        
         //First selection adds a tile and starts the mouse renderer
         public void SelectDotAtTile(Tile tile)
         {
@@ -413,6 +433,12 @@ namespace Dots
         
         #region Utilities
         
+        //Return a tile's dot
+        public Dot DotInTile(Tile tile)
+        {
+            if (tile == null) return null;
+            return m_allDots[tile.xIndex, tile.yIndex];
+        }
         //Calculate the orthographic size
         void SetupCamera()
         {
