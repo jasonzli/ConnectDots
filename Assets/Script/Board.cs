@@ -40,7 +40,8 @@ namespace Dots
         {
             Setup(config);
         }
-
+        
+        #region Initial Setup
         /// <summary>
         /// Setup
         /// </summary>
@@ -63,7 +64,9 @@ namespace Dots
             m_drawnLines = new Stack<LineRenderer>();
             m_selecting = false;
         }
+        #endregion
         
+        #region Dot and Tile Creation
         Tile[,] SetupTiles(BoardConfiguration boardConfig)
         {
             var newTiles = new Tile[width, height];
@@ -77,23 +80,6 @@ namespace Dots
                 }
             }
             return newTiles;
-        }
-
-        //Calculate the orthographic size
-        void SetupCamera()
-        {
-            //move the middle position, -10 so it's far back enough
-            Camera.main.transform.position = new Vector3((width - 1) * .5f, (height - 1) * .5f, -10f);
-
-            float aspectRatio = 9f / 16f; //widescreen
-            //calculate the orthographic size
-            float verticalSize = height * .5f + (float) marginSize;
-            float horizontalSize = (width * .5f + (float) marginSize) / aspectRatio;
-            
-            //Use the larger of the two
-            float orthographicSize = verticalSize > horizontalSize ? verticalSize : horizontalSize;
-
-            Camera.main.orthographicSize = orthographicSize;
         }
         
         //Instantaneous
@@ -154,7 +140,9 @@ namespace Dots
 
             return newDots;
         }
+        #endregion
         
+        #region Tile Selection and Line drawing
         /// <summary>
         /// Tile Selection and Line Drawing
         /// </summary>
@@ -286,8 +274,9 @@ namespace Dots
             if (m_selectedTiles.Count < 1) return;
             m_selectedTiles.RemoveAt(m_selectedTiles.Count - 1);
         }
+        #endregion
         
-        
+        #region Collapsing Column
         //This is an approach from Wilmer Lin's course on Match 3
         //The alternative would be to put this on the Dot class and have them search the board *down*--I prefer the board handle the Connect4ness of it all
         List<Dot> CollapseColumn(int column, float collapseTime = 0.1f)
@@ -350,9 +339,9 @@ namespace Dots
 
             return columns;
         }
+        #endregion
         
-        
-        
+        #region Clearing
         /// <summary>
         /// Clear pieces from tiles 
         /// </summary>
@@ -420,11 +409,27 @@ namespace Dots
             
             Destroy(dotToClear.gameObject);
         }
+        #endregion
+        
+        #region Utilities
+        
+        //Calculate the orthographic size
+        void SetupCamera()
+        {
+            //move the middle position, -10 so it's far back enough
+            Camera.main.transform.position = new Vector3((width - 1) * .5f, (height - 1) * .5f, -10f);
 
-        /// <summary>
-        /// Utilities
-        /// </summary>
+            float aspectRatio = 9f / 16f; //widescreen
+            //calculate the orthographic size
+            float verticalSize = height * .5f + (float) marginSize;
+            float horizontalSize = (width * .5f + (float) marginSize) / aspectRatio;
+            
+            //Use the larger of the two
+            float orthographicSize = verticalSize > horizontalSize ? verticalSize : horizontalSize;
 
+            Camera.main.orthographicSize = orthographicSize;
+        }
+        //Finds all Tiles without corresponding Dots
         List<Tile> AllEmptyTiles()
         {
             List<Tile> emptyTiles = new List<Tile>();
@@ -436,6 +441,8 @@ namespace Dots
 
             return emptyTiles;
         }
+        
+        //Finds the row with the lowest value in the set
         int LowestRowInTileSet(List<Tile> tiles)
         {
             int lowestRow = Int32.MaxValue;
@@ -447,6 +454,7 @@ namespace Dots
             return lowestRow;
         }
 
+        //Find all matching tiles of a type
         List<Tile> FindAllTilesWithDotType(DotType type)
         {
             List<Tile> foundTiles = new List<Tile>();
@@ -461,12 +469,13 @@ namespace Dots
             return foundTiles;
         }
         
-        //Check if things are in range or not
+        //Check if a coordinate is in range or not
         bool IsCoordInBoard(int x, int y)
         {
             return (x >= 0 && y >= 0 && x < width && y < height);
         }
 
+        //Check if tile matches cardinal direction
         bool IsTileCardinalTo(Tile origin, Tile target)
         {
             if (Mathf.Abs(origin.xIndex - target.xIndex) == 1 && origin.yIndex == target.yIndex) //column aligned
@@ -475,8 +484,9 @@ namespace Dots
                 return true;
             return false;
         }
+        #endregion
         
-        
+        #region Factories
         /// <summary>
         /// Tile and Dot factories
         /// </summary>
@@ -522,19 +532,20 @@ namespace Dots
                 return null;
             }
 
-            Vector3 targetPosition = new Vector3(x, y, 0);
-            Vector3 offsetPosition = new Vector3(x, y + yOffset, 0);
-            var newDot = Instantiate(dotPrefab, offsetPosition, Quaternion.identity);
+            Vector3 finalPosition = new Vector3(x, y, 0);
+            Vector3 startingPosition = new Vector3(x, y + yOffset, 0);
+            var newDot = Instantiate(dotPrefab, startingPosition, Quaternion.identity);
             newDot.name = config.dotTypes[randomIndex].name;
             newDot.GetComponent<Dot>().Init(x,y, config.dotTypes[randomIndex]);
             
-            //animate if needed (
+            //animate if needed
             if (yOffset != 0)
             {
-                newDot.GetComponent<Dot>().DropToPosition(targetPosition, offsetPosition, dropTime, delayTime);
+                newDot.GetComponent<Dot>().DropToPosition(finalPosition, startingPosition, dropTime, delayTime);
             }
 
             return newDot.GetComponent<Dot>();
         }
+        #endregion
     }
 }
