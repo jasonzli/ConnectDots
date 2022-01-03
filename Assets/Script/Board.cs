@@ -15,7 +15,6 @@ namespace Dots
 
         public GameObject tilePrefab;
         public GameObject dotPrefab;
-        public GameObject lineControllerPrefab;
 
         private Tile[,] m_allTiles;
         private Dot[,] m_allDots;
@@ -28,7 +27,11 @@ namespace Dots
         public FloatParameter dotDropTime;
 
         private SelectionSystem m_selectionSystem;
-        private List<Tile> selectedTiles; //tiles we've selected
+
+        public SelectionSystem SelectionSystem
+        {
+            get { return m_selectionSystem; }
+        }
         private Stack<LineRenderer> m_drawnLines; //stack of lines drawn
         private LineController m_line; //a tile to mouse line renderer
 
@@ -74,8 +77,6 @@ namespace Dots
             SetupCamera();
             m_allTiles = SetupTiles(boardConfig);
             m_allDots = SetupDots(dotDropTime.value,rowDropDelay.value);
-            m_line = Instantiate(lineControllerPrefab, Vector3.zero, Quaternion.identity).GetComponent<LineController>();
-            selectedTiles = new List<Tile>(); 
             m_drawnLines = new Stack<LineRenderer>();
             m_selecting = false;
         }
@@ -157,52 +158,6 @@ namespace Dots
         }
         #endregion
         
-        #region Tile Selection and Line drawing
-
-        /// <summary>
-        /// Tile Selection and Line Drawing
-        /// </summary>
-        /// When picking a tile, we add the dot that it is associated with to a set of dots
-        /// Moving the mouse over another tile adds that dot to the selection
-        /// If we move away and then move back over, that unselects the dot at the location
-        /// Selections add tile positions into the list of selections
-        /// When we release the press, we submit the dots and clear them from the board
-
-        
-        
-        //Create a line Controller between two tiles
-        GameObject CreateLineBetweenTiles(Tile start, Tile end)
-        {
-            if (start == null || end == null) return null;
-            
-            //Create the line and set it at the start and end
-            var line = Instantiate(lineControllerPrefab, 
-                new Vector3(start.xIndex, start.yIndex, 1f), Quaternion.identity);
-            
-            //Set the lines
-            line.GetComponent<LineController>().SetLineBetweenTiles(start,end);
-            //Add the line to the stack
-            m_drawnLines.Push(line.GetComponent<LineRenderer>());
-
-            return line;
-        }
-        
-
-        //Remove a tile dot from the list (except the first)
-        void RemoveTileFromSelection(Tile tile)
-        {
-            if (tile == null) return;
-            if (m_allDots[tile.xIndex, tile.yIndex] == null) return;
-
-            selectedTiles.Remove(tile);
-        }
-
-        void RemoveLastTileFromSelection()
-        {
-            if (selectedTiles.Count < 1) return;
-            selectedTiles.RemoveAt(selectedTiles.Count - 1);
-        }
-        #endregion
         
         #region Collapsing Column
         //This is an approach from Wilmer Lin's course on Match 3
@@ -284,11 +239,11 @@ namespace Dots
                 GameObject.Destroy(m_drawnLines.Pop().gameObject);
             }
 
-            selectedTiles = m_selectionSystem.selectedTiles;
+            var selectedTiles = m_selectionSystem.selectedTiles;
             
             if (selectedTiles.Count >= 2)//minimum two to clear
             {
-                if (m_selectionSystem.isSquare)
+                if (m_selectionSystem.IsSquare)
                 {
                     //add all tiles that have matching dot types to the list
                     selectedTiles = selectedTiles.Union(FindAllTilesWithDotType(m_selectionSystem.selectionType)).ToList();
@@ -306,7 +261,6 @@ namespace Dots
             //Empty selections and reset mouse line
             selectedTiles.Clear();
             m_selectionSystem.Reset();
-            m_line.Reset();
         }
         
         async Task ClearDotsFromTiles(List<Tile> tiles)

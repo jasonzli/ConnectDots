@@ -8,6 +8,7 @@ namespace Dots
     [RequireComponent(typeof(LineRenderer))]
     public class LineController : MonoBehaviour
     {
+        
         private bool m_active;
         private LineRenderer m_renderer;
         void Awake()
@@ -27,6 +28,7 @@ namespace Dots
             m_renderer.startColor = type.color;
             m_renderer.endColor = type.color;
         }
+        
 
         public void FollowMouseFromTile(Tile tile)
         {

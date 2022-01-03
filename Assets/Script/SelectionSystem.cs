@@ -10,7 +10,8 @@ namespace Dots
     public class SelectionSystem : MonoBehaviour
     {
 
-        private List<Tile> m_selectedTiles;
+        private List<Tile> m_selectedTiles;     
+        public List<Tile> selectedTiles { get => m_selectedTiles; }
         
         private List<TileConnection> m_paths;
         private class TileConnection //it's an edge, surprise
@@ -29,15 +30,15 @@ namespace Dots
             
             public HashSet<int> nodes { get; private set; }
         }
-        
-        public List<Tile> selectedTiles
-        {
-            get => m_selectedTiles;
-        }
+   
         public bool hasSelection { get; private set; }
         public DotType selectionType { get; private set; }
-        public bool isSquare { get; private set; }
+        
+        private int m_squaresFound;
+        public bool IsSquare { get { return (m_squaresFound > 0); } }
 
+        private List<Tile> m_squareTiles; //to hold all the square making points
+        
         void Awake()
         {
             Reset();
@@ -46,7 +47,9 @@ namespace Dots
         public void Reset()
         {
             m_selectedTiles = new List<Tile>();
+            m_squareTiles = new List<Tile>();
             m_paths = new List<TileConnection>();
+            m_squaresFound = 0;
             hasSelection = false;
         }
 
@@ -73,10 +76,7 @@ namespace Dots
             
             //find the dot in the tile
             var chosenDot = tile.Dot();
-            
-            //Update Line -later-
-            
-            
+
             //set the values
             m_selectedTiles.Add(tile);
             
@@ -85,12 +85,14 @@ namespace Dots
                 DotSelected(chosenDot);
             }
             selectionType = chosenDot.type;
-            isSquare = false;
+            m_squaresFound = 0;;
             
         }
 
         //If the tile is valid, we add it and add it as an edge
         public static Action<Dot> SquareFound;
+        public static Action<Tile, Tile> ConnectionAdded;
+        public static Action SelectionReversed;
         void HandleNewDotAtTile(Tile tile)
         {
             if (!hasSelection || tile == null) return;
@@ -104,17 +106,28 @@ namespace Dots
             if (!IsTileCardinalTo(tile, lastTile)) return; //not cardinal
             
             //check if we're going backwards
-            if (m_selectedTiles.Count > 2)//we need more than 1 to go backwards
+            if (m_selectedTiles.Count > 1)//we need more than 1 to go backwards
             {
                 var reverseTile = m_selectedTiles[m_selectedTiles.Count - 2];
                 if (tile == reverseTile)
                 {
                     
                     m_selectedTiles.RemoveAt(m_selectedTiles.Count - 1);
-                    
-                    //TODO Update lines
+
+                    if (m_squareTiles.Contains(tile))
+                    {
+                        m_squareTiles.Remove(tile);
+                        m_squaresFound--;
+                    }
                     
                     m_paths.RemoveAt(m_paths.Count-1);//remove last connection;
+                    
+                    //This updates the lines
+                    if (SelectionReversed != null)
+                    {
+                        SelectionReversed();
+                    }
+                    
                     return;
                 }
             }
@@ -128,15 +141,17 @@ namespace Dots
             //You're making a square if you can connect to something inside the list *and* you aren't repeating
             if (m_selectedTiles.Contains(tile))
             {
-                Debug.Log("SquareFound");
+                //Need to track how many squares are found for when we undo them.
+                m_squareTiles.Add(tile);
+                m_squaresFound++;
                 if (SquareFound != null)
                 {
                     SquareFound(chosenDot);
                 }
 
-                isSquare = true;
             }
 
+            //all other conditions passed, we're adding a tile finally
 
             //Simply add the tile
             m_selectedTiles.Add(tile);
@@ -144,9 +159,9 @@ namespace Dots
             m_paths.Add(candidate);
             
             //Alert selections
-            if (DotSelected != null)
+            if (ConnectionAdded != null)
             {
-                DotSelected(chosenDot);
+                ConnectionAdded(tile,lastTile);
             }
 
         }
