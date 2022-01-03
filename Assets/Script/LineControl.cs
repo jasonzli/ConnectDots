@@ -83,13 +83,15 @@ namespace Dots
 
         void DrawLineBetweenTiles(Tile a, Tile b)
         {
+            Debug.Log("Hello");
             var line = m_linePool.GetPrefabInstance();
             line.transform.position = a.transform.position;
             var startPosition = new Vector3(a.xIndex, a.yIndex, depth);
             var endPosition = new Vector3(b.xIndex, b.yIndex, depth);
             line.GetComponent<DrawnLine>().Init(startPosition, endPosition, lineThickness.value, m_lineColor);
-            ChangeMouseLinePositionTo(new Vector3(a.xIndex,a.yIndex,depth));
             m_activeLines.Add(line.GetComponent<DrawnLine>());
+            
+            ChangeMouseLinePositionTo(new Vector3(a.xIndex,a.yIndex,depth));
         }
 
         void RemoveLastLine()
@@ -98,10 +100,8 @@ namespace Dots
             
             lineToRemove.ReturnToPool();//return to pool before removing from active
             
-            if (m_activeLines.Count > 1)
-            {
-                m_activeLines.RemoveAt(m_activeLines.Count-1);
-            }
+            m_activeLines.Remove(lineToRemove);
+            
         }
 
         void RemoveAllLines()
