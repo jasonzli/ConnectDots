@@ -4,7 +4,7 @@ using System.Collections;
 
 namespace Dots
 {
-    [CreateAssetMenu(fileName = "NormalDotAsset", menuName = "PieceTypes/Normal Type")]
+    [CreateAssetMenu(fileName = "NormalDotAsset", menuName = "Dot Types/Normal Type")]
     public class DotType : ScriptableObject
     {
         public Color color;
