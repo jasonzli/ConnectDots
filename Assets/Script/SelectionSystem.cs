@@ -132,15 +132,16 @@ namespace Dots
                     
                     m_paths.RemoveAt(m_paths.Count-1);//remove last connection;
                     
-                    if (DotSelected != null) //yes it fires another event but come on...
-                    {
-                        DotSelected(chosenDot);
-                    }
-                    //This updates the lines
                     if (SelectionReversed != null)
                     {
                         SelectionReversed();
                     }
+                    
+                    if (DotSelected != null) //yes it fires another event but come on...
+                    {
+                        DotSelected(chosenDot);
+                    }
+                    
                     return;
                 }
             }
