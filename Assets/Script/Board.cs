@@ -79,6 +79,30 @@ namespace Dots
             m_drawnLines = new Stack<LineRenderer>();
             m_selecting = false;
         }
+
+        //Just for Demo Purposes
+        void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                Reset();
+            }
+        }
+        void Reset()
+        {
+            //destroy all existing tiles and dots first and then setup again
+            foreach (Dot dot in m_allDots)
+            {
+                Destroy(dot.gameObject);
+            }
+
+            foreach (Tile tile in m_allTiles)
+            {
+                Destroy(tile.gameObject);
+            }
+
+            Setup(config);
+        }
         #endregion
         
         #region Dot and Tile Creation
@@ -128,7 +152,7 @@ namespace Dots
                     if (m_allDots[i, j] != null) continue;
                     //a bit of creative code to make the drops consistent, and a 1 for a magic number to delay the animations
                     newDots[i, j] = CreateRandomDotAt(i, j,
-                        height * 1.1f - j ,dropTime, (1+DistanceFromBottomRow)*rowDelay);
+                        height * 1.7f - j ,dropTime, (1+DistanceFromBottomRow)*rowDelay);
                     PlaceDotInBoard(newDots[i,j],i,j);
                 }
             }
@@ -149,7 +173,7 @@ namespace Dots
             List<Dot> newDots = new List<Dot>();
             foreach (Tile tile in tiles)
             {
-                var dot = CreateRandomDotAt(tile.xIndex, tile.yIndex, height * 1.1f - tile.yIndex, dotDropTime.value, 0);
+                var dot = CreateRandomDotAt(tile.xIndex, tile.yIndex, height * 1.3f - tile.yIndex, dotDropTime.value, 0);
                 PlaceDotInBoard(dot,tile.xIndex,tile.yIndex);
             }
 
