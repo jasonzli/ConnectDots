@@ -156,8 +156,7 @@ namespace Dots
             return newDots;
         }
         #endregion
-        
-        
+
         #region Collapsing Column
         //This is an approach from Wilmer Lin's course on Match 3
         //The alternative would be to put this on the Dot class and have them search the board *down*--I prefer the board handle the Connect4ness of it all

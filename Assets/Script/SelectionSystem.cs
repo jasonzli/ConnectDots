@@ -118,10 +118,9 @@ namespace Dots
                 var reverseTile = m_selectedTiles[m_selectedTiles.Count - 2];
                 if (tile == reverseTile)
                 {
-                    Tile removedTile = lastTile;
                     m_selectedTiles.RemoveAt(m_selectedTiles.Count - 1);
 
-                    if (m_squareTiles.Contains(lastTile))
+                    if (m_squareTiles.Contains(lastTile))//need to leave the square to count
                     {
                         m_squareTiles.Remove(lastTile);
                         m_squaresFound--;
