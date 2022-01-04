@@ -77,8 +77,10 @@ Shader "ConnectDots/FrameShader"
                 //Combine the two mask values and offset by the x and y values so the corner isn't brigh
                 float gradient = yVal*maskX + xVal*maskY - .5*(yVal+xVal) * maskX*maskY;
 
-                float distance = smoothstep(_FillAmount+edgeOffset,_FillAmount,gradient);
+                float distance = smoothstep(_FillAmount+edgeOffset,_FillAmount,gradient) *
+                    smoothstep(0,edgeOffset,_FillAmount); // a final mask to make sure we don't have a sliver;
 
+                //Compose the color
                 float4 col = float4(_Color.xyz,mask*distance);
                 
                 return col;

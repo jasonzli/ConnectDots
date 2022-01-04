@@ -1,7 +1,4 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEditorInternal;
 using UnityEngine;
 
 namespace Dots
@@ -14,8 +11,11 @@ namespace Dots
         public BoardConfiguration config;
         private bool m_needToResetBoard;
         public static Action BoardConfigChanged;
-        public static Action ShuffleRequest;
 
+        void Start()
+        {
+            Screen.SetResolution(720, 1280, false);
+        }
         void Update()
         {
             //handle some inputs
@@ -61,6 +61,11 @@ namespace Dots
                 }
 
                 m_needToResetBoard = false;
+            }
+
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                Application.Quit();
             }
         }
     }
