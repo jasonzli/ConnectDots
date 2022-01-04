@@ -13,7 +13,7 @@ namespace Dots
         private ObjectPool m_audioSamplePool;
         private List<GameSound> m_soundObjects;
         private int m_notesPlayed;
-        private const int SQUARE_OCTAVE_NOTES = 6;
+        private const int SQUARE_OCTAVE_NOTES = 8;
         void Awake()
         {
             m_audioSamplePool = Instantiate(audioPoolPrefab, Vector3.zero, Quaternion.identity, transform).GetComponent<ObjectPool>();
@@ -51,7 +51,7 @@ namespace Dots
             
             var sound = m_audioSamplePool.GetPrefabInstance().GetComponent<GameSound>();
             sound.AudioClip.pitch = LogarithmicPitchAdjustment(m_notesPlayed);
-            sound.AudioClip.volume = .7f;
+            sound.AudioClip.volume = .6f;
             sound.AudioClip.Play();
 
             
