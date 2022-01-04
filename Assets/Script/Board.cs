@@ -50,12 +50,14 @@ namespace Dots
         private void OnEnable()
         {
             Tile.SelectionEnded += ClearPieces;
-            
+            GameControl.BoardConfigChanged += Reset;
+
         }
 
         private void OnDisable()
         {
             Tile.SelectionEnded -= ClearPieces;
+            GameControl.BoardConfigChanged -= Reset;
         }
         
         #region Initial Setup
@@ -80,14 +82,8 @@ namespace Dots
             m_selecting = false;
         }
 
-        //Just for Demo Purposes
-        void Update()
-        {
-            if (Input.GetKeyDown(KeyCode.Space))
-            {
-                Reset();
-            }
-        }
+      
+        
         void Reset()
         {
             //destroy all existing tiles and dots first and then setup again
@@ -152,7 +148,7 @@ namespace Dots
                     if (m_allDots[i, j] != null) continue;
                     //a bit of creative code to make the drops consistent, and a 1 for a magic number to delay the animations
                     newDots[i, j] = CreateRandomDotAt(i, j,
-                        height * 1.7f - j ,dropTime, (1+DistanceFromBottomRow)*rowDelay);
+                        height * 2f - j ,dropTime, (1+DistanceFromBottomRow)*rowDelay);
                     PlaceDotInBoard(newDots[i,j],i,j);
                 }
             }
