@@ -6,47 +6,50 @@ using UnityEngine;
 using UnityEngine.PlayerLoop;
 using UnityEngine.UI;
 
-public class ScreenFilter : MonoBehaviour
+namespace Dots
 {
-    public FloatParameter alphaIntensity;
-    private Image m_imageRenderer;
-
-    private void Awake()
+    public class ScreenFilter : MonoBehaviour
     {
-        m_imageRenderer = GetComponent<Image>();
-    }
+        public FloatParameter alphaIntensity;
+        private Image m_imageRenderer;
 
-    private void OnEnable()
-    {
-        SelectionSystem.SquareFound += MatchSquareColor;
-        SelectionSystem.SquareRemoved += OnSquareRemoved;
-        Tile.SelectionEnded += ClearFilter;
-    }
+        private void Awake()
+        {
+            m_imageRenderer = GetComponent<Image>();
+        }
 
-    private void OnDisable()
-    {
-        SelectionSystem.SquareFound -= MatchSquareColor;
-        SelectionSystem.SquareRemoved -= OnSquareRemoved;
-        Tile.SelectionEnded -= ClearFilter;
-    }
+        private void OnEnable()
+        {
+            SelectionSystem.SquareFound += MatchSquareColor;
+            SelectionSystem.SquareRemoved += OnSquareRemoved;
+            Tile.SelectionEnded += ClearFilter;
+        }
 
-    void MatchSquareColor(Dot dot)
-    {
-        var color = dot.type.color;
-        color.a = alphaIntensity.value;
-        m_imageRenderer.color = color;
-    }
+        private void OnDisable()
+        {
+            SelectionSystem.SquareFound -= MatchSquareColor;
+            SelectionSystem.SquareRemoved -= OnSquareRemoved;
+            Tile.SelectionEnded -= ClearFilter;
+        }
 
-    void OnSquareRemoved(int squaresRemaining)
-    {
-        if (squaresRemaining > 0) return;
+        void MatchSquareColor(Dot dot)
+        {
+            var color = dot.type.color;
+            color.a = alphaIntensity.value;
+            m_imageRenderer.color = color;
+        }
 
-        ClearFilter();
-    }
+        void OnSquareRemoved(int squaresRemaining)
+        {
+            if (squaresRemaining > 0) return;
 
-    void ClearFilter()
-    {
-        m_imageRenderer.color = Color.clear;
+            ClearFilter();
+        }
+
+        void ClearFilter()
+        {
+            m_imageRenderer.color = Color.clear;
+        }
     }
 }
 

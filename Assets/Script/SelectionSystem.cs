@@ -118,10 +118,9 @@ namespace Dots
                 var reverseTile = m_selectedTiles[m_selectedTiles.Count - 2];
                 if (tile == reverseTile)
                 {
-                    Tile removedTile = lastTile;
                     m_selectedTiles.RemoveAt(m_selectedTiles.Count - 1);
 
-                    if (m_squareTiles.Contains(lastTile))
+                    if (m_squareTiles.Contains(lastTile))//need to leave the square to count
                     {
                         m_squareTiles.Remove(lastTile);
                         m_squaresFound--;
@@ -133,15 +132,16 @@ namespace Dots
                     
                     m_paths.RemoveAt(m_paths.Count-1);//remove last connection;
                     
-                    if (DotSelected != null) //yes it fires another event but come on...
-                    {
-                        DotSelected(chosenDot);
-                    }
-                    //This updates the lines
                     if (SelectionReversed != null)
                     {
                         SelectionReversed();
                     }
+                    
+                    if (DotSelected != null) //yes it fires another event but come on...
+                    {
+                        DotSelected(chosenDot);
+                    }
+                    
                     return;
                 }
             }
