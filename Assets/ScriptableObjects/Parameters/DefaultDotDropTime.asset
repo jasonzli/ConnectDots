@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 831d774ac90d485184ac8ce27bf37223, type: 3}
   m_Name: DefaultDotDropTime
   m_EditorClassIdentifier: 
-  value: 0.3
+  value: 0.25
