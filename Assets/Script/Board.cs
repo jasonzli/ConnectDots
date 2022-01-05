@@ -53,6 +53,7 @@ namespace Dots
         {
             Tile.SelectionEnded += ClearPieces;
             GameControl.BoardConfigChanged += Reset;
+            GameControl.ShuffleRequest += ShuffleDots;
 
         }
 
@@ -60,6 +61,7 @@ namespace Dots
         {
             Tile.SelectionEnded -= ClearPieces;
             GameControl.BoardConfigChanged -= Reset;
+            GameControl.ShuffleRequest -= ShuffleDots;
         }
         
         #region Initial Setup
@@ -331,16 +333,12 @@ namespace Dots
         #endregion
         
         #region Shuffling
-
-        void Update()
-        {
-            if (Input.GetKeyDown(KeyCode.G))
-            {
-                Shuffle();
-            }
-        }
-
-        void Shuffle()
+        
+        
+        //Shuffling creates a set of destinations and shuffles those, then tells all the dots to go to their new homes
+        //The altnerative, a single shuffle with the animation mixed in, would reject animation commands because a dot
+        //could be told to animate more than once because the algorithm would repeat over them.
+        void ShuffleDots()
         {
             //Create array of swap directions
             Vector2Int[,] destinations = new Vector2Int[width, height];
@@ -385,48 +383,7 @@ namespace Dots
 
             m_allDots = shuffledDots;
         }
-        void ShuffleDots()
-        {
-            //Swap the destinations around
-            for (int i = width - 1; i > 0; i--)
-            {
-                for (int j = height - 1; j > 0; j--)
-                {
-                    var swapIndex = new Vector2Int(
-                        Mathf.FloorToInt(UnityEngine.Random.value * (i + 1)),
-                        Mathf.FloorToInt(UnityEngine.Random.value * (j + 1))
-                    );
-
-                    var originDot = m_allDots[i, j];
-                    var swapDot = m_allDots[swapIndex.x, swapIndex.y];
-
-                    m_allDots[i, j] = swapDot;
-                    m_allDots[swapIndex.x, swapIndex.y] = originDot;
-
-                    swapDot.SetCoord(i, j);
-                    originDot.SetCoord(swapIndex.x,swapIndex.y);
-
-                    var swapDotTarget = new Vector3(i, j, 0);
-                    var originDotTarget = new Vector3(swapIndex.x, swapIndex.y, 0);
-
-                    swapDot.MoveToPosition(swapDotTarget, .2f);
-                    originDot.MoveToPosition(originDotTarget, .2f);
-                    // var swapDot = m_allDots[i, j];
-                    // var dotA = m_allDots[swapIndex.x, swapIndex.y];
-                    // // only tell the one dot to move to the end of the list
-                    // var targetForDotA = new Vector3(swapDot.xIndex, swapDot.yIndex, 0);
-                    // var targetForSwapDot = new Vector3(dotA.xIndex, dotA.yIndex, 0);
-                    // dotA.MoveToPosition(targetForDotA, .2f);
-                    // dotA.SetCoord(i, j);
-                    // m_allDots[i, j] = dotA; 
-                    // m_allDots[swapIndex.x, swapIndex.y] = swapDot;
-                    // swapDot.MoveToPosition(targetForSwapDot, .2f);
-                    // swapDot.SetCoord(swapIndex.x,swapIndex.y);
-
-                }
-            }
-        }
-
+        
         //Go through the whole board and determine if matches are possible or not.
         bool NoMatchesPossibleInBoard()
         {

@@ -14,11 +14,7 @@ namespace Dots
         {
             AudioClip = GetComponent<AudioSource>();
         }
-
-        void OnEnable()
-        {
-            
-        }
+        
         void Update()
         {
             if (!AudioClip.isPlaying)
