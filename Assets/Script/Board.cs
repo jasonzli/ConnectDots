@@ -29,16 +29,16 @@ namespace Dots
         public FloatParameter dotDropTime;
 
         private SelectionSystem m_selectionSystem;
-
         public SelectionSystem SelectionSystem
         {
             get { return m_selectionSystem; }
         }
-        private Stack<LineRenderer> m_drawnLines; //stack of lines drawn
 
         private bool m_selecting; //The state variable
         private bool m_squareFound;
         private DotType m_selectedType;
+        private bool m_isClearing = false;
+
 
         private void Awake()
         {
@@ -51,7 +51,7 @@ namespace Dots
 
         private void OnEnable()
         {
-            Tile.SelectionEnded += ClearPieces;
+            Tile.SelectionEnded += ClearDots;
             GameControl.BoardConfigChanged += Reset;
             GameControl.ShuffleRequest += ShuffleDots;
 
@@ -59,7 +59,7 @@ namespace Dots
 
         private void OnDisable()
         {
-            Tile.SelectionEnded -= ClearPieces;
+            Tile.SelectionEnded -= ClearDots;
             GameControl.BoardConfigChanged -= Reset;
             GameControl.ShuffleRequest -= ShuffleDots;
         }
@@ -82,7 +82,6 @@ namespace Dots
             SetupCamera();
             m_allTiles = SetupTiles(boardConfig);
             m_allDots = SetupDots(dotDropTime.value,rowDropDelay.value);
-            m_drawnLines = new Stack<LineRenderer>();
             m_selecting = false;
         }
 
@@ -106,6 +105,11 @@ namespace Dots
         #endregion
         
         #region Dot and Tile Creation
+        /// <summary>
+        /// Setup the tiles array based on the board configuration
+        /// </summary>
+        /// <param name="boardConfig"></param>
+        /// <returns></returns>
         Tile[,] SetupTiles(BoardConfiguration boardConfig)
         {
             var newTiles = new Tile[width, height];
@@ -120,25 +124,15 @@ namespace Dots
             }
             return newTiles;
         }
-        
-        //Instantaneous
-        Dot[,] SetupPieces(BoardConfiguration boardConfig)
-        {
-            var newDots = new Dot[width, height];
-            //fill the tiles in the board
-            for (int i = 0; i < width; i++)
-            {
-                for (int j = 0; j < height; j++)
-                {
-                    if (newDots[i, j] != null) continue;
-                    newDots[i, j] = CreateRandomDotAt(i, j);
-                }
-            }
-            return newDots;
-        }
-        
-        //Animated
-        //Runs through the whole board and fills spaces without dots, Optional bottomRow is used to calculate delay-basis
+
+        /// <summary>
+        /// Runs through the board and creates new dots and tells them how to drop in.
+        /// Calculates the position, time, and delay offsets
+        /// </summary>
+        /// <param name="dropTime">Time in seconds for the drop</param>
+        /// <param name="rowDelay">Time in seconds to delay the drop compared to the next row</param>
+        /// <param name="bottomRow">Rows above this row index are delayed</param>
+        /// <returns></returns>
         Dot[,] SetupDots(float dropTime = .5f , float rowDelay = .1f, int bottomRow = 0)
         {
             var newDots = new Dot[width, height];
@@ -158,7 +152,29 @@ namespace Dots
             }
             return newDots;
         }
-
+        
+        //Instantaneous version of the SetupDot function, isn't used
+        Dot[,] SetupPieces(BoardConfiguration boardConfig)
+        {
+            var newDots = new Dot[width, height];
+            //fill the tiles in the board
+            for (int i = 0; i < width; i++)
+            {
+                for (int j = 0; j < height; j++)
+                {
+                    if (newDots[i, j] != null) continue;
+                    newDots[i, j] = CreateRandomDotAt(i, j);
+                }
+            }
+            return newDots;
+        }
+        
+        /// <summary>
+        /// Puts a dot into the board 
+        /// </summary>
+        /// <param name="dot">The dot to set</param>
+        /// <param name="x">the board coordinate</param>
+        /// <param name="y">the board coordinate</param>
         void PlaceDotInBoard(Dot dot, int x, int y)
         {
             if (!IsCoordInBoard(x, y) && dot != null) return;
@@ -168,12 +184,19 @@ namespace Dots
             dot.yIndex = y;
         }
 
-        List<Dot> CreateDotsInTiles(List<Tile> tiles)
+        /// <summary>
+        /// Creates dots within submitted
+        /// </summary>
+        /// <param name="tiles"></param>
+        /// <returns></returns>
+        List<Dot> CreateDotsInTiles(List<Tile> tiles, float dropTime = .5f, float rowDelay = .1f)
         {
             List<Dot> newDots = new List<Dot>();
+            int lowestRow = LowestRowInTileSet(tiles);
             foreach (Tile tile in tiles)
             {
-                var dot = CreateRandomDotAt(tile.xIndex, tile.yIndex, height * 1.3f - tile.yIndex, dotDropTime.value, 0);
+                var DistanceFromBottomRow = Math.Max(0,tile.yIndex-lowestRow);
+                var dot = CreateRandomDotAt(tile.xIndex, tile.yIndex, height * 2f - tile.yIndex, dropTime, rowDelay * (1+DistanceFromBottomRow));
                 PlaceDotInBoard(dot,tile.xIndex,tile.yIndex);
             }
 
@@ -182,8 +205,15 @@ namespace Dots
         #endregion
 
         #region Collapsing Column
-        //This is an approach from Wilmer Lin's course on Match 3
-        //The alternative would be to put this on the Dot class and have them search the board *down*--I prefer the board handle the Connect4ness of it all
+        //These approaches are based on Wilmer Lin's course on Match 3
+        //The alternative is to have dots search for their next possible tile. I prefer it in board.
+        
+        /// <summary>
+        /// Collapses the column of tiles at the index, returns the dots that are moving
+        /// </summary>
+        /// <param name="column"></param>
+        /// <param name="collapseTime"></param>
+        /// <returns></returns>
         List<Dot> CollapseColumn(int column, float collapseTime = 0.1f)
         {
             List<Dot> fallingDots = new List<Dot>();
@@ -220,7 +250,12 @@ namespace Dots
             return fallingDots;
         }
 
-        List<Dot> CollapseColumn(List<Tile> tiles)
+        /// <summary>
+        /// Collapses all the columns associated with this list of tiles and return the dots that are moving
+        /// </summary>
+        /// <param name="tiles"></param>
+        /// <returns></returns>
+        List<Dot> CollapseColumnsInTiles(List<Tile> tiles)
         {
             List<Dot> fallingDots = new List<Dot>();
             List<int> columnsToCollapse = GetColumnsFromTiles(tiles);
@@ -233,6 +268,7 @@ namespace Dots
             return fallingDots;
         }
         
+        //Get the column indices from the tiles
         List<int> GetColumnsFromTiles(List<Tile> tiles)
         {
             List<int> columns = new List<int>();
@@ -253,16 +289,27 @@ namespace Dots
         /// </summary>
 
 
-        //Clear the dots after a release event
+        //Event to delcare Clear function is completed
         public static Action ClearFinished;
-        public async void ClearPieces()
+        
+        /// <summary>
+        /// The Clear Dots behavior. a lot of logic but needed to be sequenced here.
+        /// 1. Collects selection system's tiles, and if it's a square selection, adds all associated tiles to the selection
+        /// 2. Clears those dots
+        /// 3. Collapses the associated columns
+        /// 4. Refills the now-empty tiles
+        /// 5. If no matches are possible, it shuffles the board.
+        /// 6. Resets the selection system
+        /// 7. Event for finished clearing
+        /// </summary>
+        public async void ClearDots()
         { 
-            //Destroy line immediately
-            while (m_drawnLines.Count != 0)
-            {
-                GameObject.Destroy(m_drawnLines.Pop().gameObject);
-            }
+            //a guard against double clears
+            if (m_isClearing) return;
 
+            m_isClearing = true;
+
+            //1. Collects selection system's tiles, and if it's a square selection, adds all associated tiles to the selection 
             var selectedTiles = m_selectionSystem.selectedTiles;
             
             if (selectedTiles.Count >= 2)//minimum two to clear
@@ -272,35 +319,44 @@ namespace Dots
                     //add all tiles that have matching dot types to the list
                     selectedTiles = selectedTiles.Union(FindAllTilesWithDotType(m_selectionSystem.selectionType)).ToList();
                 }
+                //2. Clears those dots
                 await ClearDotsFromTiles(selectedTiles);
             }
             
-            //collapse columns
-            CollapseColumn(selectedTiles);
-
-            //get the empty tiles
+            //3. Collapses the associated columns
+            CollapseColumnsInTiles(selectedTiles); 
+            
+            // 4. Refills the now-empty tiles
             var emptyTiles = AllEmptyTiles();
             
-            SetupDots(dotDropTime.value,rowDropDelay.value,LowestRowInTileSet(emptyTiles));
-
+            //SetupDots(dotDropTime.value,rowDropDelay.value,LowestRowInTileSet(emptyTiles));
+            CreateDotsInTiles(emptyTiles, dotDropTime.value, rowDropDelay.value);
+            
             await Task.Delay(500);//wait for the drop ins
             
-            //Check for matches
+            //5. If no matches are possible, it shuffles the board.
             if (NoMatchesPossibleInBoard())
             {
                 ShuffleDots();
             }
             
-            //Empty selections and reset mouse line
-            selectedTiles.Clear();
+            //6. Resets the selection system
             m_selectionSystem.Reset();
-
+            //7. Event for finished clearing
             if (ClearFinished != null)
             {
                 ClearFinished();
             }
+            
+            //clear guard
+            m_isClearing = false;
         }
         
+        /// <summary>
+        /// Gets the dots in the tiles and triggers their clear function.
+        /// Mostly a wrapper for the clear function
+        /// </summary>
+        /// <param name="tiles"></param>
         async Task ClearDotsFromTiles(List<Tile> tiles)
         {
             //get all the clearing tasks
@@ -317,7 +373,9 @@ namespace Dots
             
         }
 
-        //Clear a dot within a tile, does some indirection with the m_allDots array
+        /// <summary>
+        /// Clear a dot within a tile by calling the associated dot's clear function
+        /// </summary>
         async Task ClearDotFromTileAt(int x, int y)
         {
             Dot dotToClear = m_allDots[x, y];
@@ -334,10 +392,11 @@ namespace Dots
         
         #region Shuffling
         
-        
-        //Shuffling creates a set of destinations and shuffles those, then tells all the dots to go to their new homes
-        //The altnerative, a single shuffle with the animation mixed in, would reject animation commands because a dot
-        //could be told to animate more than once because the algorithm would repeat over them.
+        /// <summary>
+        /// Shuffle the dots in the board. However, because we have to animate this transition, we create
+        /// an array of destinations first, shuffle it, and then apply it to the dots in a new array
+        /// This helps keep the animations consistent (a single pass algorithm would be locked out of animating
+        /// </summary>
         void ShuffleDots()
         {
             //Create array of swap directions
@@ -381,27 +440,35 @@ namespace Dots
                 }
             }
 
+            //replace the dot array
             m_allDots = shuffledDots;
         }
         
-        //Go through the whole board and determine if matches are possible or not.
+        /// <summary>
+        /// Check the board from the top down for possible matches. 
+        /// </summary>
+        /// <returns></returns>
+        
         bool NoMatchesPossibleInBoard()
         {
             if (m_allDots == null) return true; //no dots, obviously no matches possible
             
-            //Go through every dot, if there's a match, return false 
-            for (int i = 0; i < width; i++)
+            for (int j = height-1; j >= 0; j--)
             {
-                for (int j = 0; j < height; j++)
+                for (int i = width-1; i >= 0; i--) //consistent reversal, but left or right doesn't really matter
                 {
-                    if (DotHasMatchesInBoard(m_allDots[i, j])) return false;
+                    if (DotHasMatchesInBoard(m_allDots[i, j])) return false; //found a match
                     
                 }
             }
-            return true;
+            return true; //no matches
         }
 
-        //Check a dot's cardinal neighbors for matching types
+        /// <summary>
+        /// Check a dot's cardinal neighbors for matches
+        /// </summary>
+        /// <param name="dot"></param>
+        /// <returns></returns>
         bool DotHasMatchesInBoard(Dot dot)
         {
             //check all directions 

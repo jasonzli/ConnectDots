@@ -45,6 +45,7 @@ namespace Dots
             }
         }
 
+        //Mouse Up Propagation
         public static Action SelectionEnded;
         void OnMouseUp()
         {

@@ -11,6 +11,8 @@ namespace Dots
         public BoardConfiguration config;
         private bool m_needToResetBoard;
         public static Action BoardConfigChanged;
+        public static Action ShuffleRequest;
+        
 
         void Start()
         {
