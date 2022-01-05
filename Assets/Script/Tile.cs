@@ -3,7 +3,13 @@ using UnityEngine;
 
 namespace Dots
 {
-    
+    /// <summary>
+    /// A tile where dots go. These are mostly placeholders for spaces on the board
+    /// They allow us to know which dot we're selecting by choosing which position we've chosen
+    /// Rationale: dots move to places on the board, and those places are tiles
+    /// tiles themselves can have properties, separate from dots, but you select *the tile* that holds the dot
+    /// TODO Move the mouse interaction code off of this tile and into a separate controller that uses raycasts and state
+    /// </summary>
     public class Tile : MonoBehaviour
     {
         public TileType type;
@@ -45,6 +51,7 @@ namespace Dots
             }
         }
 
+        //Mouse Up Propagation
         public static Action SelectionEnded;
         void OnMouseUp()
         {

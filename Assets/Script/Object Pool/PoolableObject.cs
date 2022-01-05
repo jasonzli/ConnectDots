@@ -2,6 +2,9 @@
 
 namespace Dots
 {
+    /// <summary>
+    /// Objects that work in the pool
+    /// </summary>
     public class PoolableObject : MonoBehaviour
     {
         public ObjectPool origin;

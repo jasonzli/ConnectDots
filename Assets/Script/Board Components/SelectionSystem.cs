@@ -6,6 +6,10 @@ using UnityEngine;
 
 namespace Dots
 {
+    /// <summary>
+    /// The Control handler for the game. This selects tiles off the board and creates paths
+    /// TODO clean up the connection added/dot selected events they frequently cause confusion in listeners
+    /// </summary>
     [RequireComponent(typeof(Board))]
     public class SelectionSystem : MonoBehaviour
     {
@@ -65,8 +69,10 @@ namespace Dots
             Tile.SelectionStarted -= StartSelection;
         }
 
+        /// <summary>
+        /// Starts a selection, gets the type and fires the event with the dot
+        /// </summary>
         public static Action<Dot> DotSelected;
-
         void StartSelection(Tile tile)
         {
             if (hasSelection) return;
@@ -95,36 +101,47 @@ namespace Dots
             
         }
 
+        /// <summary>
+        /// The meat
+        ///
+        /// The logic for handling new dots is this:
+        /// 1. If it's the origin dot, we go backwards
+        /// 2. Reject if this forms an existing edge
+        /// 3. Compute if this is a square
+        /// 4. Add the tile and the edge
+        /// 5. fire event on edge added
+        /// TODO clean up the connection added/dot selected events they frequently cause confusion in listeners
+        /// </summary>
         //If the tile is valid, we add it and add it as an edge
         public static Action<Dot> SquareFound;
         public static Action<Tile, Tile> ConnectionAdded;
-        public static Action SelectionReversed;
+        public static Action<Tile> SelectionReversed;
         public static Action<int> SquareRemoved;
-        void HandleNewDotAtTile(Tile tile)
+        void HandleNewDotAtTile(Tile candidateTile)
         {
-            if (!hasSelection || tile == null) return;
+            if (!hasSelection || candidateTile == null) return;
             
-            //A few possible outcomes
-            var lastTile = m_selectedTiles[m_selectedTiles.Count - 1];
-            var chosenDot = tile.Dot();
+            //Grab some reference
+            var currentTile = m_selectedTiles[m_selectedTiles.Count - 1]; //the current tile we're on
+            var chosenDot = candidateTile.Dot();
 
             //quick rejections
-            if (chosenDot == null) return;
+            if (chosenDot == null) return; //no dot there!
             if (chosenDot.type != selectionType) return; // type doesn't match
-            if (!IsTileCardinalTo(tile, lastTile)) return; //not cardinal
+            if (!IsTileCardinalTo(candidateTile, currentTile)) return; //not cardinal
             
-            //check if we're going backwards
+            // 1. If it's the origin dot, we go backwards
             if (m_selectedTiles.Count > 1)//we need more than 1 to go backwards
             {
-                
+                //This is the tile before the current tile
                 var reverseTile = m_selectedTiles[m_selectedTiles.Count - 2];
-                if (tile == reverseTile)
+                if (candidateTile == reverseTile)
                 {
                     m_selectedTiles.RemoveAt(m_selectedTiles.Count - 1);
 
-                    if (m_squareTiles.Contains(lastTile))//need to leave the square to count
+                    if (m_squareTiles.Contains(currentTile)) //need to leave the square to count
                     {
-                        m_squareTiles.Remove(lastTile);
+                        m_squareTiles.Remove(currentTile);
                         m_squaresFound--;
                         if (SquareRemoved != null)
                         {
@@ -136,29 +153,25 @@ namespace Dots
                     
                     if (SelectionReversed != null)
                     {
-                        SelectionReversed();
+                        SelectionReversed(reverseTile);//this is the new head
                     }
                     
-                    if (DotSelected != null) //yes it fires another event but come on...
-                    {
-                        DotSelected(chosenDot);
-                    }
-                    
-                    return;
+                    return; //END Execution
                 }
             }
             
-            //Reject if the candidate edge is already traversed
-            TileConnection candidate = new TileConnection(lastTile, tile);
-            if (ConnectionContainedWithinList(m_paths,candidate)) return;
+            // 2. Reject if this forms an existing edge
+            TileConnection candidateEdge = new TileConnection(currentTile, candidateTile);
+            if (ConnectionContainedWithinList(m_paths,candidateEdge)) return;
 
             //everything else should be valid
             
-            //You're making a square if you can connect to something inside the list *and* you aren't repeating
-            if (m_selectedTiles.Contains(tile))
+            // 3. Compute if this is a square
+            // We're a square if we can add something we've already added and it isn't an existing edge
+            if (m_selectedTiles.Contains(candidateTile))
             {
                 //Need to track how many squares are found for when we undo them.
-                m_squareTiles.Add(tile);
+                m_squareTiles.Add(candidateTile);
                 m_squaresFound++;
                 if (SquareFound != null)
                 {
@@ -167,17 +180,17 @@ namespace Dots
 
             }
 
-            //all other conditions passed, we're adding a tile finally
+            // 4. Add the tile and the edge //all other conditions passed, we're adding a tile finally
 
             //Simply add the tile
-            m_selectedTiles.Add(tile);
+            m_selectedTiles.Add(candidateTile);
             //and add the connection
-            m_paths.Add(candidate);
+            m_paths.Add(candidateEdge);
             
-            //Alert selections
+            // 5. fire events
             if (ConnectionAdded != null)
             {
-                ConnectionAdded(tile,lastTile);
+                ConnectionAdded(candidateTile,currentTile);
             }
             if (DotSelected != null) //yes it fires another event but come on...
             {
@@ -196,6 +209,7 @@ namespace Dots
             return false;
         }
 
+        //Compare the connections against the existing ones
         bool ConnectionContainedWithinList(List<TileConnection> connections, TileConnection candidate)
         {
             foreach (TileConnection connection in connections)

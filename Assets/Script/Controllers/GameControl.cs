@@ -3,14 +3,17 @@ using UnityEngine;
 
 namespace Dots
 {
-    
-    //Just for Demo Purposes, control the board and settings
+    /// <summary>
+    /// A board configuration controller (and shuffler) for demo purposes
+    /// </summary>
     public class GameControl : MonoBehaviour
     {
 
         public BoardConfiguration config;
         private bool m_needToResetBoard;
         public static Action BoardConfigChanged;
+        public static Action ShuffleRequest;
+        
 
         void Start()
         {
@@ -21,31 +24,33 @@ namespace Dots
             //handle some inputs
             if (Input.GetKeyDown(KeyCode.Q))
             {
-                config.height += 1;
+                config.height = Mathf.Clamp(config.height + 1, config.MinBoardDimension, config.MaxBoardDimension);
                 m_needToResetBoard = true;
             }
 
             if (Input.GetKeyDown(KeyCode.A))
             {
-                config.height -= 1;
+                
+                config.height = Mathf.Clamp(config.height - 1, config.MinBoardDimension, config.MaxBoardDimension);
                 m_needToResetBoard = true;
             }
 
             if (Input.GetKeyDown(KeyCode.W))
             {
-                config.width += 1;
+                
+                config.width = Mathf.Clamp(config.width + 1, config.MinBoardDimension, config.MaxBoardDimension);
                 m_needToResetBoard = true;
             }
             if (Input.GetKeyDown(KeyCode.S))
             {
-                config.width -= 1;
+                config.width = Mathf.Clamp(config.width - 1, config.MinBoardDimension, config.MaxBoardDimension);
                 m_needToResetBoard = true;
             }
             if (Input.GetKeyDown(KeyCode.Space)) //Reset
             {
                 m_needToResetBoard = true;
             }
-            if (Input.GetKeyDown(KeyCode.G))
+            if (Input.GetKeyDown(KeyCode.G)) //shuffle!
             {
                 if (ShuffleRequest != null)
                 {

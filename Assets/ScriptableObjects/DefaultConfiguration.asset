@@ -24,3 +24,5 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 54f6e31cafae4f848852c4e04ee07727, type: 2}
   tilePrefab: {fileID: 1555274982117750612, guid: 5df9584c32f3cf149a0e7207270148f3, type: 3}
   dotPrefab: {fileID: 546116334981736, guid: eff05016f7bf05746b230c4e1ca7d784, type: 3}
+  rowDropDelay: {fileID: 11400000, guid: e81f9dba405de6e449cd6c0c78ed8594, type: 2}
+  dotDropTime: {fileID: 11400000, guid: 7f949eabf9715e34c8de4fd46e8931f6, type: 2}

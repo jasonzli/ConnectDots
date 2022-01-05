@@ -8,6 +8,15 @@ using Vector3 = UnityEngine.Vector3;
 
 namespace Dots
 {
+    /// <summary>
+    /// A gameplay dot. It has an index to help it figure out which tile it's in.
+    /// Most of the detail about the dot is off on the DotType object
+    /// The behaviors are to animate either its movement or its shader
+    /// Movements are usually called for by the board
+    /// The color and alpha animations are handled by its procedural material
+    /// Has a couple listeners for when it should animate
+    /// TODO make the dot reference its parent tile and vice versa
+    /// </summary>
     [RequireComponent(typeof(MeshRenderer))]
     public class Dot : MonoBehaviour
     {

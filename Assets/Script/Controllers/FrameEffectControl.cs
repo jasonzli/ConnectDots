@@ -8,14 +8,20 @@ using UnityEngine.PlayerLoop;
 
 namespace Dots
 {
-    //To control the fill of the frame we have this script
-    //We can control this with a single value, the fill amount
+    /// <summary>
+    /// Controls the filling frame that follows the combo of the game
+    /// Frame fill uses a shader to calculate the fill amount
+    /// Associated parameters determine the settings on the shader
+    /// TODO make the corner not a single cube
+    /// TODO fix the DecrementFrame by fixing the event logic in SelectionSystem
+    /// </summary>
     public class FrameEffectControl : MonoBehaviour
     {
         public Material FrameEffectMaterial;
         public IntParameter SelectionsToFillFrame;
-        public CurveParameter FillInterpolationCurve;
         public FloatParameter FillTime;
+        public CurveParameter FillAnimationCurve;
+        public CurveParameter FillAmountInterpolationCurve;
         private int m_selections;
         private Color m_frameColor;
         private bool isAnimating;
@@ -72,7 +78,7 @@ namespace Dots
                     
                     //Map t
                     t = elapsedTime / FillTime.value;
-                    t = FillInterpolationCurve.Evaluate(t);
+                    t = FillAnimationCurve.Evaluate(t);
                     
                     FrameEffectMaterial.SetFloat("_FillAmount", Mathf.Lerp(currentFill,newFill,t));
                     elapsedTime += Time.deltaTime;
@@ -97,9 +103,9 @@ namespace Dots
             AnimateFill();
         }
 
-        void DecrementFrame()
+        void DecrementFrame(Tile head)
         {
-            m_selections -= 2; //has to be doubled
+            m_selections -= 1;
             AnimateFill();
         }
 
@@ -118,7 +124,13 @@ namespace Dots
 
         float FillAmount()
         {
-            return (float) m_selections / SelectionsToFillFrame.value;
+            var t = m_selections == SelectionsToFillFrame.value ? 1.0f : (float) m_selections / SelectionsToFillFrame.value;
+            if (FillAmountInterpolationCurve)
+            {
+                t = FillAmountInterpolationCurve.Evaluate(t);
+            }
+
+            return t;
         }
     }
 }

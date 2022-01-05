@@ -7,7 +7,6 @@ namespace Dots
     /// <summary>
     /// A container object for all the little dot data.
     /// Uses a different curve for animation and dot
-    /// 
     /// </summary>
     [CreateAssetMenu(fileName = "NormalDotAsset", menuName = "Dot Types/Normal Type")]
     public class DotType : ScriptableObject

@@ -5,6 +5,9 @@ using UnityEngine;
 
 namespace Dots
 {
+    /// <summary>
+    /// A class  to control a linerenderer and put it somewhere
+    /// </summary>
     [RequireComponent(typeof(LineRenderer))]
     public class DrawnLine : PoolableObject
     {

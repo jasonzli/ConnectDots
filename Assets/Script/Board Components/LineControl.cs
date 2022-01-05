@@ -6,6 +6,9 @@ using UnityEngine;
 
 namespace Dots
 {
+    /// <summary>
+    /// A line drawing class that creates instsances of the line renderer between tiles
+    /// </summary>
     //TODO Do this with the edges that we're checking. Way easier next time
     [RequireComponent(typeof(SelectionSystem))]
     public class LineControl : MonoBehaviour
@@ -43,6 +46,7 @@ namespace Dots
             SelectionSystem.DotSelected += DrawMouseLine;
             SelectionSystem.ConnectionAdded += DrawLineBetweenTiles;
             SelectionSystem.SelectionReversed += RemoveLastLine;
+            SelectionSystem.SelectionReversed += ChangeMouseLinePositionTo;
             Tile.SelectionEnded += RemoveAllLines;
         }
 
@@ -51,6 +55,7 @@ namespace Dots
             SelectionSystem.DotSelected -= DrawMouseLine;
             SelectionSystem.ConnectionAdded -= DrawLineBetweenTiles;
             SelectionSystem.SelectionReversed -= RemoveLastLine;
+            SelectionSystem.SelectionReversed -= ChangeMouseLinePositionTo;
             Tile.SelectionEnded -= RemoveAllLines;
         }
 
@@ -80,6 +85,12 @@ namespace Dots
         {
             m_mouseLine.SetPosition(1, location);
         }
+        
+        void ChangeMouseLinePositionTo(Tile head)
+        {
+            var location = new Vector3(head.xIndex, head.yIndex, depth);
+            m_mouseLine.SetPosition(1, location);
+        }
 
         void DrawLineBetweenTiles(Tile a, Tile b)
         {
@@ -93,7 +104,7 @@ namespace Dots
             ChangeMouseLinePositionTo(new Vector3(a.xIndex,a.yIndex,depth));
         }
 
-        void RemoveLastLine()
+        void RemoveLastLine(Tile head)
         {
             var lineToRemove = m_activeLines[m_activeLines.Count - 1];
             

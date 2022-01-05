@@ -5,6 +5,12 @@ using UnityEngine;
 
 namespace Dots
 {
+    /// <summary>
+    /// A child object of the Dot game object. This handles the little alpha pop effect when dots are selected
+    /// Only the parent dot should call this
+    /// Uses scriptable object parameters for controlling the animation qualities.
+    /// In order to animate, this updates the shader on the material
+    /// </summary>
     [RequireComponent(typeof(MeshRenderer))]
     public class DotSelectionAnimation : MonoBehaviour
     {
