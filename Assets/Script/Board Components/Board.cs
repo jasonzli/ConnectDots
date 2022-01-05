@@ -90,7 +90,8 @@ namespace Dots
             //Don't need to create these more than once
             m_tilePool = m_tilePool != null ? m_tilePool : Instantiate(boardConfig.tilePoolPrefab, transform).GetComponent<ObjectPool>();
             m_dotPool = m_dotPool != null ? m_dotPool : Instantiate(boardConfig.dotPoolPrefab, transform).GetComponent<ObjectPool>();
-            
+            m_tilePool.name = "Board Tile Pool";
+            m_dotPool.name = "Board Dot Pool";
             m_allTiles = SetupTiles(boardConfig);
             m_allDots = SetupDots(m_dotDropTime, m_rowDropDelay);
             m_selecting = false;
@@ -621,9 +622,7 @@ namespace Dots
                 return null;
             }
 
-            var newTile = m_tilePool.GetPrefabInstance();
-            newTile.transform.position = new Vector3(x, y, z);
-            newTile.transform.parent = transform;
+            var newTile = m_tilePool.GetPrefabInstance(new Vector3(x,y,z), Quaternion.identity, transform);
             newTile.name = $"Tile ({x},{y})";
             newTile.GetComponent<Tile>().Init(x,y, this,config.tileTypes[0]);
         
