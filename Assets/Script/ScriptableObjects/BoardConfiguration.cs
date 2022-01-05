@@ -28,8 +28,8 @@ namespace Dots
         public int height = 2;
         public TileType[] tileTypes;
         public DotType[] dotTypes;
-        public GameObject tilePrefab;
-        public GameObject dotPrefab;
+        public GameObject tilePoolPrefab;
+        public GameObject dotPoolPrefab;
         public FloatParameter rowDropDelay;
         public FloatParameter dotDropTime;
     }

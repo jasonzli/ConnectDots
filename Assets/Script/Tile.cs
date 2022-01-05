@@ -10,7 +10,7 @@ namespace Dots
     /// tiles themselves can have properties, separate from dots, but you select *the tile* that holds the dot
     /// TODO Move the mouse interaction code off of this tile and into a separate controller that uses raycasts and state
     /// </summary>
-    public class Tile : MonoBehaviour
+    public class Tile : PoolableObject
     {
         public TileType type;
         public int xIndex;

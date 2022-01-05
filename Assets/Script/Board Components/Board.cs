@@ -20,8 +20,6 @@ namespace Dots
         public int width, height;
         public int marginSize = 2;
 
-        public GameObject tilePrefab;
-        public GameObject dotPrefab;
 
         private float m_rowDropDelay;
         private float m_dotDropTime;
@@ -44,6 +42,8 @@ namespace Dots
         private bool m_squareFound;
         private DotType m_selectedType;
         private bool m_isClearing = false;
+        private ObjectPool m_tilePool;
+        private ObjectPool m_dotPool;
 
 
         private void Awake()
@@ -86,15 +86,18 @@ namespace Dots
             SetupCamera();
             m_rowDropDelay = boardConfig.rowDropDelay.value;
             m_dotDropTime = boardConfig.dotDropTime.value;
-            dotPrefab = boardConfig.dotPrefab;
-            tilePrefab = boardConfig.tilePrefab;
+            
+            //Don't need to create these more than once
+            m_tilePool = m_tilePool != null ? m_tilePool : Instantiate(boardConfig.tilePoolPrefab, transform).GetComponent<ObjectPool>();
+            m_dotPool = m_dotPool != null ? m_dotPool : Instantiate(boardConfig.dotPoolPrefab, transform).GetComponent<ObjectPool>();
+            
             m_allTiles = SetupTiles(boardConfig);
             m_allDots = SetupDots(m_dotDropTime, m_rowDropDelay);
             m_selecting = false;
             m_isClearing = false;
         }
 
-      
+
         /// <summary>
         /// Reset the board to the empty state and re run the setup according to our config
         /// </summary>
@@ -103,12 +106,14 @@ namespace Dots
             //destroy all existing tiles and dots first and then setup again
             foreach (Dot dot in m_allDots)
             {
-                Destroy(dot.gameObject);
+                //Destroy(dot.gameObject);
+                dot.ReturnToPool();
             }
 
             foreach (Tile tile in m_allTiles)
             {
-                Destroy(tile.gameObject);
+                //Destroy(tile.gameObject);
+                tile.ReturnToPool();
             }
 
             Setup(config);
@@ -398,7 +403,8 @@ namespace Dots
             //TO DO:: Do clearing animation()
             await dotToClear.Clear();
             
-            Destroy(dotToClear.gameObject);
+            //Destroy(dotToClear.gameObject);
+            dotToClear.ReturnToPool();
         }
         #endregion
         
@@ -600,9 +606,9 @@ namespace Dots
         //Factory behaviors for creating objects with types
         Tile CreateNormalTile(int x, int y, int z = 0)
         {
-            if (tilePrefab == null) {
-                Debug.LogWarning($"CreateNormalTile Error: Tile prefab not set");
-                return null;
+            //create pool if one doesn't exist
+            if (m_tilePool == null) {
+                m_tilePool = Instantiate(config.tilePoolPrefab, transform).GetComponent<ObjectPool>();
             } 
             if (!IsCoordInBoard(x, y)) {
                 Debug.LogWarning($"CreateNormalTile Error: Coord out of bounds");
@@ -614,9 +620,11 @@ namespace Dots
                 Debug.LogWarning($"No TileTypes set in the board configuration!");
                 return null;
             }
-            var newTile = Instantiate(tilePrefab, new Vector3(x,y,z), Quaternion.identity);
-            newTile.name = $"Tile ({x},{y})";
+
+            var newTile = m_tilePool.GetPrefabInstance();
+            newTile.transform.position = new Vector3(x, y, z);
             newTile.transform.parent = transform;
+            newTile.name = $"Tile ({x},{y})";
             newTile.GetComponent<Tile>().Init(x,y, this,config.tileTypes[0]);
         
             return newTile.GetComponent<Tile>();
@@ -629,6 +637,11 @@ namespace Dots
             if (!IsCoordInBoard(x, y)) {
                 Debug.LogWarning($"CreateDot Error: Coord out of bounds");
                 return null;
+            }
+
+            if (m_dotPool == null)
+            {
+                m_dotPool = Instantiate(config.dotPoolPrefab, transform).GetComponent<ObjectPool>();
             } 
             
             int randomIndex = UnityEngine.Random.Range(0, config.dotTypes.Length);
@@ -640,7 +653,7 @@ namespace Dots
 
             Vector3 finalPosition = new Vector3(x, y, 0);
             Vector3 startingPosition = new Vector3(x, y + yOffset, 0);
-            var newDot = Instantiate(dotPrefab, startingPosition, Quaternion.identity);
+            var newDot = m_dotPool.GetPrefabInstance();
             newDot.name = config.dotTypes[randomIndex].name;
             newDot.GetComponent<Dot>().Init(x,y, config.dotTypes[randomIndex]);
             

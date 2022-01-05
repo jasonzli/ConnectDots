@@ -18,7 +18,7 @@ namespace Dots
     /// TODO make the dot reference its parent tile and vice versa
     /// </summary>
     [RequireComponent(typeof(MeshRenderer))]
-    public class Dot : MonoBehaviour
+    public class Dot : PoolableObject
     {
         public int xIndex;
         public int yIndex;
