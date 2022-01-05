@@ -69,7 +69,9 @@ namespace Dots
 
         void StartSelection(Tile tile)
         {
+            if (hasSelection) return;
             if (tile == null) return;
+            
             hasSelection = true;
 
             //find the dot in the tile

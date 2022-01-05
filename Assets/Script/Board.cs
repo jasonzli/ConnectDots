@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Assertions.Must;
+using Random = System.Random;
 
 namespace Dots
 {
@@ -243,12 +245,14 @@ namespace Dots
         #endregion
         
         #region Clearing
+
         /// <summary>
         /// Clear pieces from tiles 
         /// </summary>
-        
-        
+
+
         //Clear the dots after a release event
+        public static Action ClearFinished;
         public async void ClearPieces()
         { 
             //Destroy line immediately
@@ -274,11 +278,25 @@ namespace Dots
 
             //get the empty tiles
             var emptyTiles = AllEmptyTiles();
+            
             SetupDots(dotDropTime.value,rowDropDelay.value,LowestRowInTileSet(emptyTiles));
 
+            await Task.Delay(500);//wait for the drop ins
+            
+            //Check for matches
+            if (NoMatchesPossibleInBoard())
+            {
+                ShuffleDots();
+            }
+            
             //Empty selections and reset mouse line
             selectedTiles.Clear();
             m_selectionSystem.Reset();
+
+            if (ClearFinished != null)
+            {
+                ClearFinished();
+            }
         }
         
         async Task ClearDotsFromTiles(List<Tile> tiles)
@@ -310,6 +328,150 @@ namespace Dots
             
             Destroy(dotToClear.gameObject);
         }
+        #endregion
+        
+        #region Shuffling
+
+        void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.G))
+            {
+                Shuffle();
+            }
+        }
+
+        void Shuffle()
+        {
+            //Create array of swap directions
+            Vector2Int[,] destinations = new Vector2Int[width, height];
+
+            for (int i = 0; i < width; i++)
+            {
+                for (int j = 0; j < height; j++)
+                {
+                    destinations[i, j] = new Vector2Int(i, j);
+                }
+            }
+            //Shuffle that array
+            for (int i = width - 1; i > 0; i--)
+            {
+                for (int j = height - 1; j > 0; j--)
+                {
+                    var swapIndex = new Vector2Int(
+                        Mathf.FloorToInt(UnityEngine.Random.value * (i + 1)),
+                        Mathf.FloorToInt(UnityEngine.Random.value * (j + 1))
+                    );
+                    var temp = destinations[i, j];
+                    destinations[i, j] = destinations[swapIndex.x, swapIndex.y];
+                    destinations[swapIndex.x, swapIndex.y] = temp;
+
+                }
+            }
+            
+            //apply destinations to the board of dots
+            Dot[,] shuffledDots = new Dot[width, height];
+            for (int i = 0; i < width; i++)
+            {
+                for (int j = 0; j < height; j++)
+                {
+                    var dot = m_allDots[i, j];
+                    var destination = destinations[i, j];
+                    var targetPosition = new Vector3(destination.x, destination.y, 0);
+                    dot.SetCoord(destination.x,destination.y);
+                    dot.MoveToPosition(targetPosition, .2f);
+                    shuffledDots[destination.x, destination.y] = dot;
+                }
+            }
+
+            m_allDots = shuffledDots;
+        }
+        void ShuffleDots()
+        {
+            //Swap the destinations around
+            for (int i = width - 1; i > 0; i--)
+            {
+                for (int j = height - 1; j > 0; j--)
+                {
+                    var swapIndex = new Vector2Int(
+                        Mathf.FloorToInt(UnityEngine.Random.value * (i + 1)),
+                        Mathf.FloorToInt(UnityEngine.Random.value * (j + 1))
+                    );
+
+                    var originDot = m_allDots[i, j];
+                    var swapDot = m_allDots[swapIndex.x, swapIndex.y];
+
+                    m_allDots[i, j] = swapDot;
+                    m_allDots[swapIndex.x, swapIndex.y] = originDot;
+
+                    swapDot.SetCoord(i, j);
+                    originDot.SetCoord(swapIndex.x,swapIndex.y);
+
+                    var swapDotTarget = new Vector3(i, j, 0);
+                    var originDotTarget = new Vector3(swapIndex.x, swapIndex.y, 0);
+
+                    swapDot.MoveToPosition(swapDotTarget, .2f);
+                    originDot.MoveToPosition(originDotTarget, .2f);
+                    // var swapDot = m_allDots[i, j];
+                    // var dotA = m_allDots[swapIndex.x, swapIndex.y];
+                    // // only tell the one dot to move to the end of the list
+                    // var targetForDotA = new Vector3(swapDot.xIndex, swapDot.yIndex, 0);
+                    // var targetForSwapDot = new Vector3(dotA.xIndex, dotA.yIndex, 0);
+                    // dotA.MoveToPosition(targetForDotA, .2f);
+                    // dotA.SetCoord(i, j);
+                    // m_allDots[i, j] = dotA; 
+                    // m_allDots[swapIndex.x, swapIndex.y] = swapDot;
+                    // swapDot.MoveToPosition(targetForSwapDot, .2f);
+                    // swapDot.SetCoord(swapIndex.x,swapIndex.y);
+
+                }
+            }
+        }
+
+        //Go through the whole board and determine if matches are possible or not.
+        bool NoMatchesPossibleInBoard()
+        {
+            if (m_allDots == null) return true; //no dots, obviously no matches possible
+            
+            //Go through every dot, if there's a match, return false 
+            for (int i = 0; i < width; i++)
+            {
+                for (int j = 0; j < height; j++)
+                {
+                    if (DotHasMatchesInBoard(m_allDots[i, j])) return false;
+                    
+                }
+            }
+            return true;
+        }
+
+        //Check a dot's cardinal neighbors for matching types
+        bool DotHasMatchesInBoard(Dot dot)
+        {
+            //check all directions 
+            int x = dot.xIndex;
+            int y = dot.yIndex;
+
+            Vector2Int[] locationsToCheck = new Vector2Int[]
+            {
+                new Vector2Int(x + 1, y),
+                new Vector2Int(x - 1, y),
+                new Vector2Int(x, y + 1),
+                new Vector2Int(x, y -1)
+            };
+            //check the locations
+            foreach (Vector2Int location in locationsToCheck)
+            {
+                if (!IsCoordInBoard(location.x, location.y)) continue; //ignore if out of bounds
+
+                var neighborDot = DotInTile(m_allTiles[location.x, location.y]);
+                
+                if (neighborDot == null) continue; //ignore if for some reason the dot doesn't exist in a valid tile
+
+                if (dot.type == neighborDot.type) return true; //types match, make a dot
+            }
+            return false; //didn't find any matches
+        }
+        
         #endregion
         
         #region Utilities

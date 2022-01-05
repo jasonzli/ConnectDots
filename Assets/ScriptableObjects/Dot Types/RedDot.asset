@@ -17,4 +17,5 @@ MonoBehaviour:
   texture: {fileID: 0}
   dotSize: {fileID: 11400000, guid: 6c80d86322b1bd048b7de2a94fc76b3f, type: 2}
   clearAnimation: {fileID: 11400000, guid: a561de0c46c90bd408e7ee18fdc6a1a7, type: 2}
+  moveAnimation: {fileID: 11400000, guid: 53d7d27dee46aa64f9e6e89ef1ad8467, type: 2}
   dropAnimation: {fileID: 11400000, guid: 851d61c1bf7a4ea4780dae4026760f20, type: 2}
