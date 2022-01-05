@@ -1,8 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.PlayerLoop;
+using Vector3 = UnityEngine.Vector3;
 
 namespace Dots
 {
@@ -117,33 +119,53 @@ namespace Dots
             
             isAnimating = false;
         }
+
+        public async Task MoveToPosition(Vector3 targetPosition, float moveInTime = .5f)
+        {
+            if (isAnimating) return;
+
+            isAnimating = true;
+
+            await MoveTo(targetPosition, moveInTime);
+
+            isAnimating = false;
+        }
+        
+        private async Task MoveTo(Vector3 targetPosition, float moveInTime = .5f)
+        {
+            var origin = transform.position;
+            await AnimateUsingCurve(type.moveAnimation, origin, targetPosition, moveInTime);
+        }
+
         
         //Drop into place using Drop Curve
         private async Task DropTo(Vector3 targetPosition, Vector3 offsetPosition, float dropInTime = .5f)
         {
-            var elapsedTime = 0.0f;
-            while (elapsedTime < dropInTime)
+            await AnimateUsingCurve(type.dropAnimation, offsetPosition, targetPosition, dropInTime);
+        }
+
+        private async Task AnimateUsingCurve(CurveParameter animationCurve, Vector3 origin, Vector3 target, float animationTime = .5f)
+        {
+            var elapsedTime = 0f;
+            var t = 0f;
+            while (elapsedTime < animationTime)
             {
-                float t = Mathf.Clamp(elapsedTime / dropInTime, 0f, 1f);
+                t = Mathf.Clamp(elapsedTime / animationTime, 0f, 1f);
                 
-                //Map t value
-                if (type.dropAnimation)
+                //remap if curve exists
+                if (animationCurve)
                 {
-                    t = type.dropAnimation.Evaluate(t);
-                }
-                else //Linear
-                {
-                    t = t;
+                    t = animationCurve.Evaluate(t);
                 }
                 
                 //Move
-                transform.position = Vector3.Lerp(offsetPosition, targetPosition, t);
-                
+                transform.position = Vector3.Lerp(origin, target, t);
+
                 elapsedTime += Time.deltaTime;
                 await Task.Yield();
             }
 
-            transform.position = targetPosition;
+            transform.position = target;
         }
         
         

@@ -14,7 +14,8 @@ namespace Dots
         public BoardConfiguration config;
         private bool m_needToResetBoard;
         public static Action BoardConfigChanged;
-        
+        public static Action ShuffleRequest;
+
         void Update()
         {
             //handle some inputs
@@ -43,6 +44,13 @@ namespace Dots
             if (Input.GetKeyDown(KeyCode.Space)) //Reset
             {
                 m_needToResetBoard = true;
+            }
+            if (Input.GetKeyDown(KeyCode.G))
+            {
+                if (ShuffleRequest != null)
+                {
+                    ShuffleRequest();
+                }
             }
 
             if (m_needToResetBoard)
