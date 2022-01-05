@@ -8,7 +8,11 @@ using UnityEngine.UI;
 
 namespace Dots
 {
-    public class ScreenFilter : MonoBehaviour
+    /// <summary>
+    /// A class to control the alpha layer that appears when a square is made
+    /// Pass parameters to the shader
+    /// </summary>
+    public class ScreenFilterController : MonoBehaviour
     {
         public FloatParameter alphaIntensity;
         private Image m_imageRenderer;

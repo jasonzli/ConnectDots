@@ -6,6 +6,9 @@ using UnityEngine;
 
 namespace Dots
 {
+    /// <summary>
+    /// A line drawing class that creates instsances of the line renderer between tiles
+    /// </summary>
     //TODO Do this with the edges that we're checking. Way easier next time
     [RequireComponent(typeof(SelectionSystem))]
     public class LineControl : MonoBehaviour

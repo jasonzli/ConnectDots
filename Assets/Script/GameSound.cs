@@ -4,6 +4,9 @@ using UnityEngine;
 
 namespace Dots
 {
+    /// <summary>
+    /// A game sound that plays until it isn't so it disappears gracefully
+    /// </summary>
     public class GameSound : PoolableObject
     {
         [SerializeField]

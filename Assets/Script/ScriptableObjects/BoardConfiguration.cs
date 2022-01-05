@@ -3,6 +3,10 @@ using UnityEngine.UIElements;
 
 namespace Dots
 {
+    /// <summary>
+    /// a container for all the board configuration data
+    /// Can be swapped out if you want different tiles or different dots
+    /// </summary>
     [CreateAssetMenu(fileName = "Active Pieces", menuName = "BoardConfiguration", order = 0)]
     public class BoardConfiguration : ScriptableObject
     {

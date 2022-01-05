@@ -3,8 +3,9 @@ using UnityEngine;
 
 namespace Dots
 {
-    
-    //Just for Demo Purposes, control the board and settings
+    /// <summary>
+    /// A board configuration controller (and shuffler) for demo purposes
+    /// </summary>
     public class GameControl : MonoBehaviour
     {
 

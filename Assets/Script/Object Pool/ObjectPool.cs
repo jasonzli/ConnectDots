@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Dots{
 
-    //It's exactly what you think it is, based on patrykgalach's approach
+    //An object pool based on patrykgalach's approach
 
     public class ObjectPool : MonoBehaviour
     {

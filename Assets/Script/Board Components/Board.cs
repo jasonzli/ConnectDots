@@ -8,6 +8,11 @@ using Random = System.Random;
 
 namespace Dots
 {
+    /// <summary>
+    /// The game board. Uses a configuration file to generate the properties of the board
+    /// Handles Setup, Tile and Dot Creation, Column Collapsing, Clearing Dots,and Shuffling
+    /// Also holds utilities for creating tiles and dots
+    /// </summary>
     [RequireComponent(typeof(SelectionSystem))]
     public class Board : MonoBehaviour
     {

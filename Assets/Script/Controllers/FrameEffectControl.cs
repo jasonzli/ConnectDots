@@ -8,8 +8,13 @@ using UnityEngine.PlayerLoop;
 
 namespace Dots
 {
-    //To control the fill of the frame we have this script
-    //We can control this with a single value, the fill amount
+    /// <summary>
+    /// Controls the filling frame that follows the combo of the game
+    /// Frame fill uses a shader to calculate the fill amount
+    /// Associated parameters determine the settings on the shader
+    /// TODO make the corner not a single cube
+    /// TODO fix the DecrementFrame by fixing the event logic in SelectionSystem
+    /// </summary>
     public class FrameEffectControl : MonoBehaviour
     {
         public Material FrameEffectMaterial;
@@ -99,7 +104,7 @@ namespace Dots
 
         void DecrementFrame()
         {
-            m_selections -= 2; //has to be doubled
+            m_selections -= 2; //has to be doubled because of the DotSelected issue in the controller
             AnimateFill();
         }
 

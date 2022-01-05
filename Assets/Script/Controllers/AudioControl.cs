@@ -4,7 +4,12 @@ using UnityEngine;
 
 namespace Dots
 {
-    //A simple pick up piece audio sample
+    /// <summary>
+    /// A class that plays a single tone and pitch shifts logarithmically to higher tones
+    /// Uses a pool to generate and play sound objects
+    /// A patch job because I only have one tone.
+    /// TODO get a proper arpeggio of tones to play
+    /// </summary>
     public class AudioControl : MonoBehaviour
     {
         public GameObject audioPoolPrefab;
@@ -25,15 +30,13 @@ namespace Dots
         void Reset()
         {
             m_notesPlayed = 0;
-            //ReturnAllObjects();
-            //m_soundObjects.Clear();
         }
 
         float LogarithmicPitchAdjustment(int notes)
         {
             if (notes == 0) return 1f;
             
-            return Mathf.Log(notes)*.1f + 1f;
+            return Mathf.Log(notes)*pitchIncrement.value + 1f;
         }
 
         void ReturnAllObjects()
