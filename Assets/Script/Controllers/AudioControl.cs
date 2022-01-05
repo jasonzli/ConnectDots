@@ -9,6 +9,7 @@ namespace Dots
     /// Uses a pool to generate and play sound objects
     /// A patch job because I only have one tone.
     /// TODO get a proper arpeggio of tones to play
+    /// TODO Fix against the events
     /// </summary>
     public class AudioControl : MonoBehaviour
     {

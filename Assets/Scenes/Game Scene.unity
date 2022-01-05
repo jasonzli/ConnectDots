@@ -505,8 +505,6 @@ MonoBehaviour:
   marginSize: 2
   tilePrefab: {fileID: 1555274982117750612, guid: 5df9584c32f3cf149a0e7207270148f3, type: 3}
   dotPrefab: {fileID: 546116334981736, guid: eff05016f7bf05746b230c4e1ca7d784, type: 3}
-  rowDropDelay: {fileID: 11400000, guid: e81f9dba405de6e449cd6c0c78ed8594, type: 2}
-  dotDropTime: {fileID: 11400000, guid: 7f949eabf9715e34c8de4fd46e8931f6, type: 2}
 --- !u!114 &1023769832
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -585,8 +583,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   FrameEffectMaterial: {fileID: 2100000, guid: e6718bf771a9b2841b70bcc747d42e77, type: 2}
   SelectionsToFillFrame: {fileID: 11400000, guid: 3fbe8dcc9dd613847ac30b521e1a15ad, type: 2}
-  FillInterpolationCurve: {fileID: 11400000, guid: f20f9150478da814f8ed88bb4856d87b, type: 2}
   FillTime: {fileID: 11400000, guid: 9eafcd916f67e6449b9737d56340bb61, type: 2}
+  FillAnimationCurve: {fileID: 11400000, guid: f20f9150478da814f8ed88bb4856d87b, type: 2}
+  FillAmountInterpolationCurve: {fileID: 11400000, guid: c7aeb839984e7214caec109bb4dcf918, type: 2}
 --- !u!1 &1401466980
 GameObject:
   m_ObjectHideFlags: 0

@@ -19,8 +19,9 @@ namespace Dots
     {
         public Material FrameEffectMaterial;
         public IntParameter SelectionsToFillFrame;
-        public CurveParameter FillInterpolationCurve;
         public FloatParameter FillTime;
+        public CurveParameter FillAnimationCurve;
+        public CurveParameter FillAmountInterpolationCurve;
         private int m_selections;
         private Color m_frameColor;
         private bool isAnimating;
@@ -77,7 +78,7 @@ namespace Dots
                     
                     //Map t
                     t = elapsedTime / FillTime.value;
-                    t = FillInterpolationCurve.Evaluate(t);
+                    t = FillAnimationCurve.Evaluate(t);
                     
                     FrameEffectMaterial.SetFloat("_FillAmount", Mathf.Lerp(currentFill,newFill,t));
                     elapsedTime += Time.deltaTime;
@@ -123,7 +124,13 @@ namespace Dots
 
         float FillAmount()
         {
-            return (float) m_selections / SelectionsToFillFrame.value;
+            var t = m_selections == SelectionsToFillFrame.value ? 1.0f : (float) m_selections / SelectionsToFillFrame.value;
+            if (FillAmountInterpolationCurve)
+            {
+                t = FillAmountInterpolationCurve.Evaluate(t);
+            }
+
+            return t;
         }
     }
 }

@@ -115,7 +115,7 @@ namespace Dots
         //If the tile is valid, we add it and add it as an edge
         public static Action<Dot> SquareFound;
         public static Action<Tile, Tile> ConnectionAdded;
-        public static Action SelectionReversed;
+        public static Action<Tile> SelectionReversed;
         public static Action<int> SquareRemoved;
         void HandleNewDotAtTile(Tile candidateTile)
         {
@@ -153,7 +153,7 @@ namespace Dots
                     
                     if (SelectionReversed != null)
                     {
-                        SelectionReversed();
+                        SelectionReversed(currentTile);
                     }
                     
                     if (DotSelected != null) //yes it fires another event but come on...
