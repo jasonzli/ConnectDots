@@ -106,6 +106,8 @@ namespace Dots
 
         void RemoveLastLine(Tile head)
         {
+            if (m_activeLines.Count < 1) return;
+            
             var lineToRemove = m_activeLines[m_activeLines.Count - 1];
             
             lineToRemove.ReturnToPool();//return to pool before removing from active

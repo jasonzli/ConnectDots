@@ -6,7 +6,6 @@ using UnityEngine;
 namespace Dots{
 
     //An object pool based on patrykgalach's approach
-
     public class ObjectPool : MonoBehaviour
     {
         public PoolableObject prefab;
