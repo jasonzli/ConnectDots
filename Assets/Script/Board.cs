@@ -18,6 +18,9 @@ namespace Dots
         public GameObject tilePrefab;
         public GameObject dotPrefab;
 
+        private float m_rowDropDelay;
+        private float m_dotDropTime;
+        
         private Tile[,] m_allTiles;
         private Dot[,] m_allDots;
         public Dot[,] AllDots
@@ -25,8 +28,6 @@ namespace Dots
             get => m_allDots;
         }
 
-        public FloatParameter rowDropDelay;
-        public FloatParameter dotDropTime;
 
         private SelectionSystem m_selectionSystem;
         public SelectionSystem SelectionSystem
@@ -49,6 +50,9 @@ namespace Dots
             Setup(config);
         }
 
+        /// <summary>
+        /// Event subscription
+        /// </summary>
         private void OnEnable()
         {
             Tile.SelectionEnded += ClearDots;
@@ -66,27 +70,29 @@ namespace Dots
         
         #region Initial Setup
         /// <summary>
-        /// Setup
+        /// Grab local references of the boardconfig variables and then apply them to create the board
         /// </summary>
-        
-        //Get local versions of the variables--and possibly reset the board at some point.
         void Setup(BoardConfiguration boardConfig)
         {
-            //get local versions of the width and height
             width = boardConfig.width;
             height = boardConfig.height;
             m_allDots = new Dot[width, height];
             m_allTiles = new Tile[width, height];
+            SetupCamera();
+            m_rowDropDelay = boardConfig.rowDropDelay.value;
+            m_dotDropTime = boardConfig.dotDropTime.value;
             dotPrefab = boardConfig.dotPrefab;
             tilePrefab = boardConfig.tilePrefab;
-            SetupCamera();
             m_allTiles = SetupTiles(boardConfig);
-            m_allDots = SetupDots(dotDropTime.value,rowDropDelay.value);
+            m_allDots = SetupDots(m_dotDropTime, m_rowDropDelay);
             m_selecting = false;
+            m_isClearing = false;
         }
 
       
-        
+        /// <summary>
+        /// Reset the board to the empty state and re run the setup according to our config
+        /// </summary>
         void Reset()
         {
             //destroy all existing tiles and dots first and then setup again
@@ -185,9 +191,9 @@ namespace Dots
         }
 
         /// <summary>
-        /// Creates dots within submitted
+        /// Creates dots within submitted tiles
         /// </summary>
-        /// <param name="tiles"></param>
+        /// <param name="tiles">Tiles that we get new dots for!</param>
         /// <returns></returns>
         List<Dot> CreateDotsInTiles(List<Tile> tiles, float dropTime = .5f, float rowDelay = .1f)
         {
@@ -330,7 +336,7 @@ namespace Dots
             var emptyTiles = AllEmptyTiles();
             
             //SetupDots(dotDropTime.value,rowDropDelay.value,LowestRowInTileSet(emptyTiles));
-            CreateDotsInTiles(emptyTiles, dotDropTime.value, rowDropDelay.value);
+            CreateDotsInTiles(emptyTiles, m_dotDropTime, m_rowDropDelay);
             
             await Task.Delay(500);//wait for the drop ins
             
@@ -342,6 +348,7 @@ namespace Dots
             
             //6. Resets the selection system
             m_selectionSystem.Reset();
+            
             //7. Event for finished clearing
             if (ClearFinished != null)
             {
