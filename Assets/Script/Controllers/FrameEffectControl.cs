@@ -103,9 +103,9 @@ namespace Dots
             AnimateFill();
         }
 
-        void DecrementFrame()
+        void DecrementFrame(Tile head)
         {
-            m_selections -= 2; //has to be doubled because of the DotSelected issue in the controller
+            m_selections -= 1;
             AnimateFill();
         }
 

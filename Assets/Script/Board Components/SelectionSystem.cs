@@ -153,15 +153,10 @@ namespace Dots
                     
                     if (SelectionReversed != null)
                     {
-                        SelectionReversed(currentTile);
+                        SelectionReversed(reverseTile);//this is the new head
                     }
                     
-                    if (DotSelected != null) //yes it fires another event but come on...
-                    {
-                        DotSelected(chosenDot);
-                    }
-                    
-                    return;
+                    return; //END Execution
                 }
             }
             

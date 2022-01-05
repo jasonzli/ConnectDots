@@ -9,7 +9,6 @@ namespace Dots
     /// Uses a pool to generate and play sound objects
     /// A patch job because I only have one tone.
     /// TODO get a proper arpeggio of tones to play
-    /// TODO Fix against the events
     /// </summary>
     public class AudioControl : MonoBehaviour
     {
@@ -81,14 +80,14 @@ namespace Dots
             
         }
 
-        void DecrementPitch()
+        void DecrementPitch(Tile head)
         {
-            m_notesPlayed = m_notesPlayed - 1 - 1; //one for the removal and one for the new selection
+            m_notesPlayed = m_notesPlayed - 1; 
         }
-        
+
         void DecrementSquarePitch(int squaresRemaining)
         {
-            m_notesPlayed = m_notesPlayed - SQUARE_OCTAVE_NOTES - 1; //4 for the square and 1 for the new selection
+            m_notesPlayed = m_notesPlayed - SQUARE_OCTAVE_NOTES;
         }
         void OnEnable()
         {
